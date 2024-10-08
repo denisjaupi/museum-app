@@ -10,7 +10,7 @@ hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_c
 mp_drawing = mp.solutions.drawing_utils
 
 # Directory to save collected data
-data_dir = 'data'
+data_dir = os.path.join('ai', 'data')
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
