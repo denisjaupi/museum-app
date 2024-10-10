@@ -4,6 +4,15 @@ import numpy as np
 import csv
 import os
 
+##########################################
+gesture_classes = {
+    0: "Indice in su",
+    1: "Indice e medio in su",
+    2: "Zoom in",
+    3: "Zoom out",
+}
+##########################################
+
 # MediaPipe hands initialization
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5)
@@ -24,13 +33,19 @@ def save_landmarks_to_csv(landmarks, gesture_class):
         row = [gesture_class] + [coord for landmark in landmarks for coord in (landmark.x, landmark.y, landmark.z)]
         csv_writer.writerow(row)
 
-# Video capture from webcam
-cap = cv2.VideoCapture(0)
+# Print available gestures
+print("Seleziona il gesto da raccogliere:")
+for key, value in gesture_classes.items():
+    print(f"{key}: {value}")
 
 # Input for gesture classification
-gesture_class = input("Inserisci il numero della classe del gesto (es. 0 per 'pollice in su', 1 per 'pollice in giù'): ")
+gesture_class = int(input("Inserisci il numero della classe del gesto: "))
 
-print("Inizia la raccolta dei dati. Premi 'q' per uscire.")
+print(f"Inizia la raccolta dati per: {gesture_classes[gesture_class]}")
+print("Premi 'q' per uscire.")
+
+# Video capture from webcam
+cap = cv2.VideoCapture(0)
 
 while cap.isOpened():
     success, image = cap.read()
