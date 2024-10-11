@@ -5,12 +5,14 @@ import csv
 import os
 
 ##########################################
+
 gesture_classes = {
     0: "Indice in su",
     1: "Indice e medio in su",
     2: "Zoom in",
     3: "Zoom out",
 }
+
 ##########################################
 
 # MediaPipe hands initialization
@@ -19,7 +21,7 @@ hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_c
 mp_drawing = mp.solutions.drawing_utils
 
 # Directory to save collected data
-data_dir = os.path.join('ai', 'data')
+data_dir = os.path.join('ai', 'dataset')
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 

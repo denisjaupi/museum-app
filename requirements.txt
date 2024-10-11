@@ -1,5 +1,7 @@
 mediapipe
+mediapipe-model-maker
 opencv-python
 tensorflow
 kivy
 numpy
+pandas
