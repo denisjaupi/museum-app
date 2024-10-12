@@ -1,72 +1,119 @@
 import os
 import pandas as pd
-import tensorflow as tf
-from mediapipe_model_maker import gesture_recognizer
-import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+import mediapipe_model_maker as mm
 
-assert tf.__version__.startswith('2')
 
 class GestureModelTrainer:
+
     def __init__(self, data_dir):
-        self.data_dir = data_dir
-        self.dataset = None
-        self.model = None
+        self.data_dir = data_dir  # Directory contenente i file CSV
+        self.dataset = None  # Dataset completo verrà memorizzato qui
 
     def load_data(self):
-        """Carica i dati dai file CSV presenti nella cartella data_dir e usa il nome del file come label."""
-        dataframes = []
+        """
+        Carica i dati dai file CSV presenti nella cartella data_dir.
+        Aggiunge il nome del file come etichetta (label) per ogni file CSV.
+        """
+        dataframes = []  # Lista per memorizzare i DataFrame caricati
+
+        # Passo 1: Iterare su tutti i file nella cartella data_dir
         for filename in os.listdir(self.data_dir):
-            if filename.endswith('.csv'):
-                filepath = os.path.join(self.data_dir, filename)
-                try:
-                    # Carica il DataFrame
-                    df = pd.read_csv(filepath, on_bad_lines='skip')
-                    
-                    # Estrai il nome del file senza estensione e aggiungilo come colonna 'label'
-                    label = os.path.splitext(filename)[0]  # Ottieni il nome del file senza estensione
-                    df['label'] = label  # Aggiungi la colonna 'label' al DataFrame
+            # Passo 2: Creare il percorso completo per il file CSV
+            filepath = os.path.join(self.data_dir, filename)
+            
+            try:
+                # Passo 3: Caricare il file CSV in un DataFrame, saltando righe malformate
+                df = pd.read_csv(filepath, on_bad_lines='skip')
+                
+                # Controlla se il DataFrame ha 63 colonne (21 landmarks con 3 coordinate ciascuno)
+                if df.shape[1] != 63:
+                    print(f"Attenzione: il file {filename} non ha il formato corretto (dovrebbe avere 63 colonne).")
+                    continue  # Salta il file se non è formattato correttamente
 
-                    dataframes.append(df)
-                    print(f"File {filename} caricato con successo.")
-                except Exception as e:
-                    print(f"Errore durante la lettura del file {filename}: {e}")
+                # Passo 4: Utilizzare il nome del file (senza estensione) come etichetta
+                label = os.path.splitext(filename)[0]  # Nome del file senza estensione
+                df['label'] = label  # Aggiungi la colonna 'label' al DataFrame
 
-        if not dataframes:
-            print("Nessun DataFrame è stato caricato. Controlla i tuoi file CSV.")
-            return None  # Restituisci None se non ci sono DataFrame
+                # Passo 5: Aggiungere il DataFrame alla lista dei DataFrame
+                dataframes.append(df)
+                print(f"File {filename} caricato con successo.")
+            
+            except Exception as e:
+                # Passo 6: Gestire eventuali errori di caricamento
+                print(f"Errore durante la lettura del file {filename}: {e}")
 
-        # Concatenare tutti i DataFrame in uno solo
-        self.dataset = pd.concat(dataframes, ignore_index=True)
-        print(f"Dati caricati: {self.dataset.shape[0]} righe e {self.dataset.shape[1]} colonne.")
-        return self.dataset
-
-    def train_model(self):
-        """Addestra il modello di riconoscimento gesti."""
-        if self.dataset is None:
-            raise ValueError("I dati devono essere caricati prima di addestrare il modello.")
+        # Passo 7: Concatenare tutti i DataFrame in un unico dataset
+        if dataframes:
+            self.dataset = pd.concat(dataframes, ignore_index=True).drop_duplicates()  # Rimuove eventuali duplicati
+            print(f"Dati caricati: {self.dataset.shape[0]} righe e {self.dataset.shape[1]} colonne.")
+        else:
+            print("Nessun dato caricato.")
         
-        # Stampa le colonne del dataset
-        print("Colonne nel dataset:", self.dataset.columns.tolist())
+        # Passo 8: Restituire il dataset completo
+        return self.dataset
+    
+    def prepare_data(self):
+        """Prepara i dati per l'addestramento, validazione e test."""
+        if self.dataset is None:
+            raise ValueError("I dati devono essere caricati prima di prepararli.")
 
-        # Assicurati che la colonna 'label' esista
-        if 'label' not in self.dataset.columns:
-            raise KeyError("'label' non trovato nel dataset. Assicurati che la colonna esista.")
-
-        # Preparare i dati
+        # Separare le features e le etichette
         X = self.dataset.drop('label', axis=1)
         y = self.dataset['label']
 
-        # Suddividere il dataset in set di addestramento e di test
-        train_size = int(0.8 * len(X))
-        X_train, X_test = X[:train_size], X[train_size:]
-        y_train, y_test = y[:train_size], y[train_size:]
+        # Suddividere il dataset in addestramento e test (80% / 20%)
+        X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-        # Creare e addestrare il modello
-        self.model = gesture_recognizer.create_model(X_train, y_train)
-        history = self.model.fit(X_train, y_train, epochs=50, validation_split=0.2)
-        print("Modello addestrato.")
-        return history  # Restituisci la storia per la tracciatura
+        # Suddividere il dataset temporaneo in validazione e test (50% / 50% del set temporaneo)
+        X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
 
+        # Creare DataFrame per i dati di addestramento, validazione e test
+        train_df = pd.DataFrame(X_train)
+        train_df['label'] = y_train.reset_index(drop=True)
+
+        val_df = pd.DataFrame(X_val)
+        val_df['label'] = y_val.reset_index(drop=True)
+
+        test_df = pd.DataFrame(X_test)
+        test_df['label'] = y_test.reset_index(drop=True)
+
+        return train_df, val_df, test_df
+
+    def train_model(self, train_df, val_df):
+
+        """Definisce i parametri per il modello, crea e addestra il modello."""
+
+        # Crea un dataset in base alla documentazione della libreria
+        train_data = mm.gesture_recognizer.Dataset(train_df.drop('label', axis=1).values, train_df['label'].values)
+        val_data = mm.gesture_recognizer.Dataset(val_df.drop('label', axis=1).values, val_df['label'].values)
+        options=mm.gesture_recognizer.GestureRecognizerOptions()
+
+        # Creare il modello di riconoscimento gesti
+        model = mm.gesture_recognizer.GestureRecognizer.create(
+            train_data=train_data,
+            validation_data=val_data,
+            options=options
+            #batch_size=model_params['batch_size'],
+            #epochs=model_params['epochs'],
+            #learning_rate=model_params['learning_rate']
+        )
+
+        # Definire il numero di epoche e dimensione del batch qui
+        epochs = 50
+        batch_size = 32
+
+        # Addestrare il modello
+        history = model.fit(
+            train_data=train_data,
+            validation_data=val_data,
+            epochs=epochs,
+            batch_size=batch_size
+        )
+
+        print("Modello addestrato con successo.")
+        return model, history
+        
     def evaluate_model(self):
         """Valuta le prestazioni del modello."""
         if self.model is None:
@@ -93,6 +140,13 @@ if __name__ == "__main__":
     
     # Carica i dati, addestra il modello e valuta le prestazioni
     dataset = trainer.load_data()
-    history = trainer.train_model()
-    trainer.evaluate_model()
-    trainer.plot_training_history(history)
+    train_df, val_df, test_df = trainer.prepare_data()
+
+    # Addestrare il modello
+    model, history = trainer.train_model(train_df, val_df)
+
+    # Mostrare le forme dei DataFrame
+    print("Forma del train set:", train_df.shape)
+    print("Forma del validation set:", val_df.shape)
+    print("Forma del test set:", test_df.shape)
+
