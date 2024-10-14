@@ -13,6 +13,8 @@ class GestureModelTrainer:
 
     def load_data(self):
         """Carica i dati dal file CSV."""
+
+
         data_path = self.data_dir
         self.dataset = pd.read_csv(data_path, header=None, on_bad_lines="skip")
         self.dataset.columns = ['label'] + [f'coord_{i}' for i in range(1, len(self.dataset.columns))]
@@ -20,6 +22,8 @@ class GestureModelTrainer:
 
     def prepare_data(self):
         """Prepara i dati per l'addestramento, validazione e test."""
+
+
         print("[INFO] Preparazione dei dati: suddivisione in train, val, test...")
         
         # Mescola i dati
@@ -42,7 +46,10 @@ class GestureModelTrainer:
 
     def train_model(self, train_df, val_df, test_df):
         """Allena un modello e valuta le sue prestazioni."""
+
+
         print("[INFO] Inizio dell'addestramento del modello...")
+
         model = RandomForestClassifier(n_estimators=100, random_state=42)
 
         # Addestramento
@@ -66,7 +73,9 @@ class GestureModelTrainer:
     def save_model(self, model, model_path='gesture_recognition_model.pkl'):
         """ Salva il modello addestrato in un file .pkl per poterlo riutilizzare successivamente. """
 
+
         print(f"[INFO] Salvataggio del modello in {model_path}...")
+
         try:
             joblib.dump(model, model_path)
             print(f"[INFO] Modello salvato con successo in {model_path}!")
@@ -76,8 +85,9 @@ class GestureModelTrainer:
 
 
 if __name__ == "__main__":
+    
     # Definisci la directory dove si trova il file CSV
-    data_dir = 'src/gestures_data.csv'  # Cambia questo con il percorso effettivo del tuo file CSV
+    data_dir = 'src/ai/dataset/gestures_data.csv'  
 
     # Istanzia l'oggetto GestureModelTrainer
     trainer = GestureModelTrainer(data_dir)
