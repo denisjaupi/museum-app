@@ -13,14 +13,27 @@ class GestureModelDetector:
             0: "Indice alzato",
             1: "Indice e medio alzati",
             2: "Zoom in",
-            3: "Zoom out"
+            3: "Indice alzato"
         }
         self.model_path =  'src/ai/model/gesture_recognition_model.pkl'
 
     def load_model(self, model_path):
         """Carica il modello addestrato."""
-        return joblib.load(model_path)
+        model = joblib.load(model_path)
+        return model
 
+    def predict_gesture(self, landmarks):
+        """Prevede il gesto basato sulle coordinate dei landmark."""
+        model = self.load_model(self.model_path)
+        coordinates = np.array([[lm.x, lm.y, lm.z] for lm in landmarks]).flatten()
+        return model.predict([coordinates])[0]
+    
+    def extract_landmarks(self, results):
+        """Estrae le coordinate dei landmark."""
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                return hand_landmarks.landmark
+    
 def main():
     # Inizializza MediaPipe
     mp_hands = mp.solutions.hands
@@ -46,13 +59,13 @@ def main():
         # Disegna le mani e riconosci i gesti
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
-                # Estrai le coordinate delle mani
-                landmarks = hand_landmarks.landmark
-                coordinates = np.array([[lm.x, lm.y, lm.z] for lm in landmarks]).flatten()
 
+                # Estrai le coordinate delle mani
+                hand_landmarks = trainer.extract_landmarks(results)
+                
                 # Prevedi il gesto
-                gesture_id = model.predict([coordinates])[0]
-                gesture_name = trainer.class_labels.get(gesture_id, "Gesto sconosciuto")
+                gesture_id = trainer.predict_gesture(hand_landmarks.landmark)
+                gesture_name = trainer.class_labels[gesture_id]
 
                 # Disegna i landmarks
                 mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
