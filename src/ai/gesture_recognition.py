@@ -10,10 +10,10 @@ import joblib
 class GestureModelDetector:
     def __init__(self):
         self.class_labels = {
-            0: "Indice alzato",
+            #0: "Indice nel culo",
             1: "Indice e medio alzati",
             2: "Zoom in",
-            3: "Indice alzato"
+            #3: "Zoom out"
         }
         self.model_path =  'src/ai/model/gesture_recognition_model.pkl'
 
@@ -33,6 +33,30 @@ class GestureModelDetector:
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
                 return hand_landmarks.landmark
+            
+    def is_index_finger_up(self, landmarks):
+        """Riconosce se il dito indice è alzato basato sui landmarks, considerando l'orientamento della mano."""
+        index_finger_tip = landmarks[8]  # Punta dell'indice
+        index_finger_mid = landmarks[6]  # Punto medio dell'indice
+        middle_finger_tip = landmarks[12]  # Punta del medio
+        wrist = landmarks[0]  # Polso
+
+        # Verifica l'orientamento della mano:
+        # Se il polso è sotto il punto medio dell'indice, la mano è verso l'alto (normale).
+        if wrist.y < index_finger_mid.y:
+            # Mano rivolta verso l'alto: l'indice è considerato alzato se la punta è sopra il punto medio
+            is_index_extended = index_finger_tip.y > index_finger_mid.y
+            is_above_other_fingers = index_finger_tip.y > middle_finger_tip.y
+        else:
+            # Mano rivolta verso il basso: l'indice è alzato se la punta è sotto il punto medio
+            is_index_extended = index_finger_tip.y < index_finger_mid.y
+            is_above_other_fingers = index_finger_tip.y < middle_finger_tip.y
+
+        # L'indice è considerato alzato se è esteso e sopra il medio, in base all'orientamento della mano
+        return is_index_extended and is_above_other_fingers
+
+
+
     
 def main():
     # Inizializza MediaPipe
@@ -60,15 +84,22 @@ def main():
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
 
-                # Estrai le coordinate delle mani
+                # # Estrai le coordinate delle mani
                 hand_landmarks = trainer.extract_landmarks(results)
                 
-                # Prevedi il gesto
-                gesture_id = trainer.predict_gesture(hand_landmarks.landmark)
-                gesture_name = trainer.class_labels[gesture_id]
+                # # Prevedi il gesto
+                # gesture_id = trainer.predict_gesture(hand_landmarks.landmark)
+                # gesture_name = trainer.class_labels[gesture_id]
+
+                # Riconosci se il dito indice è alzato
+                if trainer.is_index_finger_up(hand_landmarks):
+                    gesture_name = "Indice alzato"
+                else:
+                    gesture_name = "Indice non alzato"
 
                 # Disegna i landmarks
-                mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                for hand_landmarks in results.multi_hand_landmarks:
+                    mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
                 # Mostra il nome del gesto
                 cv2.putText(frame, gesture_name, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)

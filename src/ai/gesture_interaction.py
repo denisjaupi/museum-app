@@ -3,18 +3,33 @@ import pyautogui
 import cv2
 import mediapipe as mp
 import gesture_recognition as gr
+import math
+import time
 
 class GestureInteraction:
+
     def __init__(self):
         # Ottieni dimensioni dello schermo
         self.screen_width, self.screen_height = pyautogui.size()
         # Coda per memorizzare le ultime 5 posizioni del dito
         self.pointer_positions = collections.deque(maxlen=5)
 
+
+        # Timer per bloccare i gesti opposti per un breve periodo
+        self.last_zoom_time = 0
+        self.zoom_cooldown = 1  # 1 secondo di cooldown tra i gesti opposti
+
+
+    def calculate_distance(self, point1, point2):
+        """Calcola la distanza euclidea tra due punti 3D."""
+        return math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2)
+    
+
     def move_mouse(self, index_finger_coords):
         """Muove il puntatore del mouse usando le coordinate della punta dell'indice."""
         # Estrarre le coordinate X e Y della punta dell'indice
-        index_x, index_y = index_finger_coords
+        index_x = index_finger_coords.x
+        index_y = index_finger_coords.y
 
         # Scala le coordinate in base alla risoluzione dello schermo
         mouse_x = int(index_x * self.screen_width)
@@ -31,21 +46,80 @@ class GestureInteraction:
         pyautogui.moveTo(smoothed_x, smoothed_y)
 
 
-    def handle_gesture(self, gesture_name, landmarks):
+    def zoomOut(self, landmarks):
+        """Calcola il vettore di zoom out tra pollice e indice."""
+        current_time = time.time()
+        
+        # Controlla se è passato abbastanza tempo dall'ultimo zoom in
+        if current_time - self.last_zoom_time < self.zoom_cooldown:
+            print("Aspetta prima di fare uno zoom out.")
+            return
+
+        # Estrai le coordinate della punta del pollice e dell'indice
+        thumb_tip = landmarks[4]  # Punta del pollice
+        index_finger_tip = landmarks[8]  # Punta dell'indice
+
+        # Calcola la distanza tra le due punte
+        distance = self.calculate_distance(thumb_tip, index_finger_tip)
+
+        # Esegui il zoom out in base alla distanza (ad esempio, puoi scalare un'immagine)
+        print(f"Zoom out - Distanza tra le dita: {distance}")
+
+        # Imposta il timer per evitare il gesto opposto immediato
+        self.last_zoom_time = current_time
+
+
+    def zoomIn(self, landmarks):
+        """Calcola il vettore di zoom in tra pollice e indice."""
+        current_time = time.time()
+        
+        # Controlla se è passato abbastanza tempo dall'ultimo zoom out
+        if current_time - self.last_zoom_time < self.zoom_cooldown:
+            print("Aspetta prima di fare uno zoom in.")
+            return
+
+        # Estrai le coordinate della punta del pollice e dell'indice
+        thumb_tip = landmarks[4]  # Punta del pollice
+        index_finger_tip = landmarks[8]  # Punta dell'indice
+
+        # Calcola la distanza tra le due punte
+        distance = self.calculate_distance(thumb_tip, index_finger_tip)
+
+        # Esegui il zoom in in base alla distanza
+        print(f"Zoom in - Distanza tra le dita: {distance}")
+
+        # Imposta il timer per evitare il gesto opposto immediato
+        self.last_zoom_time = current_time
+
+    def indexUp(self, gesture_name, landmarks):
         """Gestisci l'interazione basata sul gesto riconosciuto."""
         if gesture_name == "Indice alzato":
             # Coordinate della punta dell'indice (landmark[8] in MediaPipe Hands)
             index_finger_tip = landmarks[8]  # 8 è la punta dell'indice in MediaPipe
 
             # Le coordinate di MediaPipe sono normalizzate (0-1), quindi possiamo utilizzarle direttamente
-            self.move_mouse((index_finger_tip.x, index_finger_tip.y))
+            self.move_mouse((index_finger_tip))
+
+
+
+    def handle_gesture(self, gesture_name, landmarks):
+        """Gestisci l'interazione basata sul gesto riconosciuto."""
+        if gesture_name == "Indice alzato":
+            self.indexUp(gesture_name, landmarks)
+        elif gesture_name == "Indice e medio alzati":
+            # self.indexMiddleUp(gesture_name, landmarks)
+            print("Move image")
+        elif gesture_name == "Zoom in":
+            self.zoomIn(landmarks)
+        elif gesture_name == "Zoom out":
+            self.zoomOut(landmarks)
 
 
 
 def main():
     # Inizializza MediaPipe Hands
     mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5)
+    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1)
 
     # Inizializza il riconoscimento dei gesti e l'interazione
     gesture_detector = gr.GestureModelDetector()
@@ -67,14 +141,30 @@ def main():
         # Estrai i landmark delle mani dal risultato
         landmarks = gesture_detector.extract_landmarks(results)
 
+
+        ############################################################################################
+
         # Se sono presenti landmark, procedi al riconoscimento dei gesti
         if landmarks:
-            # Prevedi il gesto
+            # Prevedi il gesto usando il modello addestrato
             gesture_id = gesture_detector.predict_gesture(landmarks)
-            gesture_name = gesture_detector.class_labels.get(gesture_id, "Gesto sconosciuto")
+            gesture_name = gesture_detector.class_labels.get(gesture_id)
 
-            # Gestisci l'interazione in base al gesto riconosciuto
-            gesture_interaction.handle_gesture(gesture_name, landmarks)
+            # Verifica i gesti riconosciuti dal modello e gestisci le azioni
+            if gesture_name == "Indice e medio alzati" or gesture_name == "Zoom in" or gesture_name == "Zoom out": 
+                # Gestisci i gesti tranne l'indice alzato
+                gesture_interaction.handle_gesture(gesture_name, landmarks)
+            else:
+                # Se non viene riconosciuto nessuno degli altri gesti, controlla se l'indice è alzato
+                if gesture_detector.is_index_finger_up(landmarks): 
+                    # Gestisci il movimento del cursore
+                    gesture_name = "Indice alzato"
+                    gesture_interaction.indexUp(gesture_name, landmarks)
+                else:
+                    gesture_name = "Gesto non riconosciuto"
+        
+        ############################################################################################
+
 
             # Disegna i landmarks sul frame e visualizza il nome del gesto
             for hand_landmarks in results.multi_hand_landmarks:
