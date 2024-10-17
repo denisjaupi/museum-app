@@ -8,72 +8,74 @@ import time
 
 class GestureInteraction:
 
-    def __init__(self):
+    def __init__(self, smoothing_factor=5):
         # Ottieni dimensioni dello schermo
         self.screen_width, self.screen_height = pyautogui.size()
         # Coda per memorizzare le ultime 5 posizioni del dito
-        self.pointer_positions = collections.deque(maxlen=5)
+        self.pointer_positions = collections.deque(maxlen=smoothing_factor)
 
 
         # Timer per bloccare i gesti opposti per un breve periodo
         self.last_zoom_time = 0
         self.zoom_cooldown = 1  # 1 secondo di cooldown tra i gesti opposti
+
         self.last_position = None  # Posizione dell'immagine
 
 ################################################################################
 
 
     def calculate_distance(self, point1, point2):
-        """Calcola la distanza euclidea tra due punti 3D."""
-        return math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2)
+        distance = math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2)
+        return distance
+
+
+    def smooth(self, new_position):
+        """
+        Aggiunge la nuova posizione alla coda e restituisce la posizione smussata.
+        """
+        self.pointer_positions.append(new_position)
+        avg_x = sum(pos[0] for pos in self.pointer_positions) / len(self.pointer_positions)
+        avg_y = sum(pos[1] for pos in self.pointer_positions) / len(self.pointer_positions)
+        return int(avg_x), int(avg_y)
 
 
     def move_mouse(self, index_finger_coords):
-        """Muove il puntatore del mouse usando le coordinate della punta dell'indice."""
-        # Estrarre le coordinate X e Y della punta dell'indice
-        index_x = index_finger_coords.x
-        index_y = index_finger_coords.y
+        # Scala le coordinate della punta dell'indice rispetto alla risoluzione dello schermo
+        mouse_x = int(index_finger_coords.x * self.screen_width)
+        mouse_y = int(index_finger_coords.y * self.screen_height)
 
-        # Scala le coordinate in base alla risoluzione dello schermo
-        mouse_x = int(index_x * self.screen_width)
-        mouse_y = int(index_y * self.screen_height)
-
-        # Aggiungi la posizione corrente alla coda
-        self.pointer_positions.append((mouse_x, mouse_y))
-
-        # Calcola la posizione smussata
-        smoothed_x = int(sum(pos[0] for pos in self.pointer_positions) / len(self.pointer_positions))
-        smoothed_y = int(sum(pos[1] for pos in self.pointer_positions) / len(self.pointer_positions))
+        # Applica lo smussamento
+        smoothed_x, smoothed_y = self.smooth((mouse_x, mouse_y))
 
         # Muove il mouse alla posizione smussata
         pyautogui.moveTo(smoothed_x, smoothed_y)
 
 
-    def scroll(self, current_position):
-        """
-        Simula lo scorrimento in base al movimento verticale e orizzontale della mano.
-        """
-        current_x, current_y = current_position
+    def scroll(self, index_finger_coords):
+        # Scala le coordinate della punta dell'indice
+        scroll_x = int(index_finger_coords.x * self.screen_width)
+        scroll_y = int(index_finger_coords.y * self.screen_height)
+
         if self.last_position is not None:
             last_x, last_y = self.last_position
-            delta_x = last_x - current_x  # Movimento orizzontale
-            delta_y = last_y - current_y  # Movimento verticale
+            delta_x = last_x - scroll_x  # Movimento orizzontale
+            delta_y = last_y - scroll_y  # Movimento verticale
 
+            scroll_sensitivity = 2
             # Ignora piccoli movimenti per evitare scorrimenti indesiderati
             if abs(delta_y) > 5:
-                pyautogui.scroll(int(delta_y))  # Scroll verticale
+                pyautogui.scroll(int(delta_y * scroll_sensitivity))  # Scroll verticale
             if abs(delta_x) > 5:
-                pyautogui.hscroll(int(delta_x))  # Scroll orizzontale
+                pyautogui.hscroll(int(delta_x * scroll_sensitivity))  # Scroll orizzontale
 
-        # Aggiorna l'ultima posizione della punta dell'indice
-        self.last_position = current_position
+        # Aggiorna l'ultima posizione
+        self.last_position = self.smooth((scroll_x, scroll_y))
 
 
 ################################################################################
 
 
     def indexUp(self, landmarks):
-
         index_finger_tip = landmarks[8]  # Punta dell'indice
 
         # Le coordinate di MediaPipe sono normalizzate (0-1), quindi possiamo utilizzarle direttamente
@@ -81,11 +83,10 @@ class GestureInteraction:
 
 
     def indexMiddleUp(self, landmarks):
-
         index_finger_tip = landmarks[8] 
         
-        current_position = (int(index_finger_tip.x * self.screen_width), int(index_finger_tip.y * self.screen_height))
-        self.scroll(current_position)
+        # current_position = (int(index_finger_tip.x * self.screen_width), int(index_finger_tip.y * self.screen_height))
+        self.scroll(index_finger_tip)
         
 
     def zoomIn(self, landmarks):
@@ -138,7 +139,7 @@ class GestureInteraction:
 
     def handle_gesture(self, gesture_name, landmarks):
         """Gestisci l'interazione basata sul gesto riconosciuto."""
-        if gesture_name == "Indice alzato":
+        if gesture_name == "Indice alzato" or gesture_name == "Indice ancora alzato":
             self.indexUp(landmarks)
         elif gesture_name == "Indice e medio alzati":
             self.indexMiddleUp(landmarks)
@@ -186,16 +187,14 @@ def main():
             gesture_name = gesture_detector.class_labels.get(gesture_id)
 
             # Verifica i gesti riconosciuti dal modello e gestisci le azioni
-            if gesture_name == "Indice e medio alzati":
-            # or gesture_name == "Zoom in" or gesture_name == "Zoom out": 
-                # Gestisci i gesti tranne l'indice alzato
+            if gesture_name == "Indice e medio alzati" or gesture_name == "Indice alzato" or gesture_name == "Zoom in" or gesture_name == "Zoom out": 
                 gesture_interaction.handle_gesture(gesture_name, landmarks)
             else:
-                # Se non viene riconosciuto nessuno degli altri gesti, controlla se l'indice è alzato
+                # Se non viene riconosciuto nessuno degli altri gesti, 
+                # controlla se l'indice è alzato per il movimento del mouse
                 if gesture_detector.is_index_finger_up(landmarks): 
-                    # Gestisci il movimento del cursore
-                    gesture_name = "Indice alzato"
-                    gesture_interaction.indexUp(landmarks)
+                    gesture_name = "Indice ancora alzato"
+                    gesture_interaction.handle_gesture(gesture_name, landmarks)
                 else:
                     gesture_name = "Gesto non riconosciuto"
         
@@ -213,7 +212,7 @@ def main():
         cv2.imshow('Gesture Recognition', frame)
 
         # Esci dal ciclo se premi ESC
-        if cv2.waitKey(1) & 0xFF == 27:  # 27 è il codice ASCII per ESC
+        if cv2.waitKey(1) & 0xFF == 27:  
             break
 
     # Rilascia la webcam e chiudi tutte le finestre

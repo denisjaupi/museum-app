@@ -10,10 +10,10 @@ import joblib
 class GestureModelDetector:
     def __init__(self):
         self.class_labels = {
-            #0: "Indice nel culo",
+            0: "Indice alzato",
             1: "Indice e medio alzati",
             2: "Zoom in",
-            #3: "Zoom out"
+            3: "Zoom out"
         }
         self.model_path =  'src/ai/model/gesture_recognition_model.pkl'
 
@@ -87,15 +87,15 @@ def main():
                 # # Estrai le coordinate delle mani
                 hand_landmarks = trainer.extract_landmarks(results)
                 
-                # # Prevedi il gesto
-                # gesture_id = trainer.predict_gesture(hand_landmarks.landmark)
-                # gesture_name = trainer.class_labels[gesture_id]
+                # Prevedi il gesto
+                gesture_id = trainer.predict_gesture(hand_landmarks)
+                gesture_name = trainer.class_labels[gesture_id]
 
                 # Riconosci se il dito indice è alzato
-                if trainer.is_index_finger_up(hand_landmarks):
-                    gesture_name = "Indice alzato"
-                else:
-                    gesture_name = "Indice non alzato"
+                # if trainer.is_index_finger_up(hand_landmarks):
+                #     gesture_name = "Indice alzato"
+                # else:
+                #     gesture_name = "Indice non alzato"
 
                 # Disegna i landmarks
                 for hand_landmarks in results.multi_hand_landmarks:
