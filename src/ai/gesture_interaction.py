@@ -99,8 +99,6 @@ class GestureInteraction:
                 # Se il mouse è fermo per più di 3 secondi, esegui il click
                 if current_time - self.last_move_time > 2.5:
                     pyautogui.click()  # Simula un doppio click del mouse
-                    time.sleep(0.1)  # Aggiungi un ritardo per evitare il click multiplo
-                    pyautogui.click()
                     print("Click eseguito!")
             else:
                 # Se il mouse si è mosso, aggiorna il timer
@@ -226,7 +224,10 @@ def main():
             gesture_name = gesture_detector.class_labels.get(gesture_id)
 
             # Verifica i gesti riconosciuti dal modello e gestisci le azioni
-            if gesture_name == "Indice alzato" or gesture_name == "Indice e medio alzati" or gesture_name == "Zoom in" or gesture_name == "Zoom out": 
+            if gesture_name == "Indice alzato" or\
+                 gesture_name == "Indice e medio alzati" or\
+                     gesture_name == "Zoom in" or\
+                         gesture_name == "Zoom out": 
                 gesture_interaction.handle_gesture(gesture_name, landmarks)
             else:
                 # Se non viene riconosciuto nessuno degli altri gesti, 
