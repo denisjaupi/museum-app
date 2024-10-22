@@ -1,18 +1,21 @@
 import cv2
 import mediapipe as mp
-import time
+import numpy as np
+
 
 class ZoomingTest:
     def __init__(self):
+        
         self.zoom_factor = 1.0        # Fattore di zoom iniziale
         self.max_zoom = 3.0           # Limite massimo di zoom
-        self.min_zoom = 0.5           # Limite minimo di zoom
+        self.min_zoom = 1.0           # Limite minimo di zoom
         self.min_distance = 30.0      # Distanza minima tra le dita per zoom out massimo
         self.max_distance = 200.0     # Distanza massima tra le dita per zoom in massimo
-        self.zoom_sensitivity = 0.02  # Sensibilità del fattore di zoom
-        self.stable_distance = None   # Distanza stabile da cui far partire lo zoom
-        self.zooming_active = False   # Stato dello zoom (attivo/non attivo)
-        self.previous_distance = None # Per memorizzare la distanza precedente
+        self.initial_distance = None   # Distanza iniziale tra le dita
+        self.stable_distance = None     # Distanza stabile da cui far partire lo zoom
+        self.zooming_active = False    # Stato dello zoom (attivo/non attivo)
+        self.previous_distance = None   # Per memorizzare la distanza precedente
+
 
     def calculate_distance(self, point1, point2, frame_width, frame_height):
         """Calcola la distanza euclidea tra due punti, adattata alla dimensione del frame."""
@@ -29,32 +32,24 @@ class ZoomingTest:
         zoom_factor = (normalized_dist - self.min_distance) / (self.max_distance - self.min_distance)
         return self.min_zoom + zoom_factor * zoom_range
 
+
     def apply_zoom(self, image):
-        """Applica il fattore di zoom all'immagine."""
+        """Applica il fattore di zoom all'immagine centrando lo zoom sull'immagine stessa."""
         h, w = image.shape[:2]
-        new_w = int(w * self.zoom_factor)
-        new_h = int(h * self.zoom_factor)
+        new_w, new_h = int(w * self.zoom_factor), int(h * self.zoom_factor)
 
-        # Stampa le dimensioni originali e quelle ridimensionate
-        print(f"[INFO] Original size: {w}x{h}, Zoom factor: {self.zoom_factor}, New size: {new_w}x{new_h}")
-
-        # Ridimensiona l'immagine in base al fattore di zoom
+        # Calcola il ridimensionamento dell'immagine
         zoomed_image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
 
-        # Taglia l'immagine se è più grande del frame originale
-        if self.zoom_factor > 1.0:
-            # Centra l'immagine tagliata
-            crop_x = (new_w - w) // 2
-            crop_y = (new_h - h) // 2
-            zoomed_image = zoomed_image[crop_y:crop_y+h, crop_x:crop_x+w]
-            print(f"[INFO] Zooming in, cropping to {w}x{h}, crop_x: {crop_x}, crop_y: {crop_y}")
-        elif self.zoom_factor < 1.0:
-            # TODO: Implementare il padding per lo zoom out
-            # Se lo zoom factor è inferiore a 1.0, limitare al 100% dell'immagine
-            zoomed_image = cv2.resize(image, (w, h), interpolation=cv2.INTER_LINEAR)
-            print(f"[INFO] Zooming out, limited to original size {w}x{h}")
-        
+        # Calcola il punto di partenza per il cropping basato sull'offset
+        start_x = max((new_w // 2) - (w // 2), 0)
+        start_y = max((new_h // 2) - (h // 2), 0)
+
+        # Croppa l'immagine zoomata
+        zoomed_image = zoomed_image[start_y:start_y + h, start_x:start_x + w]
+
         return zoomed_image
+
 
     def process_zoom(self, current_distance):
         """Gestisce la logica del gesto di zoom in base alla distanza corrente tra le dita."""
@@ -87,9 +82,11 @@ class ZoomingTest:
         # Memorizza la distanza corrente per il confronto successivo
         self.previous_distance = current_distance
 
+
     def reset_zoom(self):
         """Resetta lo stato dello zoom gesture."""
         print("[INFO] Zoom gesture reset")
+        self.initial_distance = None  # Reset della distanza iniziale
         self.stable_distance = None
         self.zooming_active = False
         self.previous_distance = None
@@ -107,7 +104,7 @@ def main():
 
     # Inizializza MediaPipe Hands
     mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5)
+    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1)
     mp_drawing = mp.solutions.drawing_utils
 
     # Inizializza la classe ZoomingTest
@@ -141,11 +138,10 @@ def main():
                 # Processa il gesto di zoom solo quando le dita raggiungono la distanza minima o massima
                 zooming_test.process_zoom(currentDist)
 
-                # Applica il fattore di zoom all'immagine
+                # Applica lo zoom all'immagine
                 zoomed_image = zooming_test.apply_zoom(image)
-
-                # Mostra l'immagine zoomata
                 cv2.imshow('Zoomed Image', zoomed_image)
+
 
         else:
             # Reset dello stato del gesto di zoom quando non ci sono mani
