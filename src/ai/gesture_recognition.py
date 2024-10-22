@@ -90,13 +90,7 @@ def main():
                 # Prevedi il gesto
                 gesture_id = trainer.predict_gesture(hand_landmarks)
                 gesture_name = trainer.class_labels[gesture_id]
-
-                # Riconosci se il dito indice è alzato
-                # if trainer.is_index_finger_up(hand_landmarks):
-                #     gesture_name = "Indice alzato"
-                # else:
-                #     gesture_name = "Indice non alzato"
-
+                
                 # Disegna i landmarks
                 for hand_landmarks in results.multi_hand_landmarks:
                     mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)

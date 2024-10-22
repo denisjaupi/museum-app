@@ -1,21 +1,19 @@
 import cv2
 import mediapipe as mp
-import numpy as np
 
 
-class ZoomingTest:
+class ZoomingController:
+    
     def __init__(self):
-        
         self.zoom_factor = 1.0        # Fattore di zoom iniziale
         self.max_zoom = 3.0           # Limite massimo di zoom
         self.min_zoom = 1.0           # Limite minimo di zoom
         self.min_distance = 30.0      # Distanza minima tra le dita per zoom out massimo
         self.max_distance = 200.0     # Distanza massima tra le dita per zoom in massimo
         self.initial_distance = None   # Distanza iniziale tra le dita
-        self.stable_distance = None     # Distanza stabile da cui far partire lo zoom
-        self.zooming_active = False    # Stato dello zoom (attivo/non attivo)
-        self.previous_distance = None   # Per memorizzare la distanza precedente
-
+        self.stable_distance = None    # Distanza stabile da cui far partire lo zoom
+        self.zooming_active = False     # Stato dello zoom (attivo/non attivo)
+        self.previous_distance = None    # Per memorizzare la distanza precedente
 
     def calculate_distance(self, point1, point2, frame_width, frame_height):
         """Calcola la distanza euclidea tra due punti, adattata alla dimensione del frame."""
@@ -25,13 +23,10 @@ class ZoomingTest:
 
     def normalize_zoom(self, current_dist):
         """Normalizza la distanza corrente tra le dita rispetto ai limiti minimi e massimi."""
-        # Limita la distanza all'intervallo [min_distance, max_distance]
         normalized_dist = max(self.min_distance, min(current_dist, self.max_distance))
-        # Mappa la distanza normalizzata sul range [min_zoom, max_zoom]
         zoom_range = self.max_zoom - self.min_zoom
         zoom_factor = (normalized_dist - self.min_distance) / (self.max_distance - self.min_distance)
         return self.min_zoom + zoom_factor * zoom_range
-
 
     def apply_zoom(self, image):
         """Applica il fattore di zoom all'immagine centrando lo zoom sull'immagine stessa."""
@@ -50,11 +45,9 @@ class ZoomingTest:
 
         return zoomed_image
 
-
     def process_zoom(self, current_distance):
         """Gestisce la logica del gesto di zoom in base alla distanza corrente tra le dita."""
         if self.stable_distance is None:
-            # Imposta la stable_distance al min_distance o max_distance in base alla distanza iniziale
             if current_distance <= self.min_distance:
                 self.stable_distance = self.min_distance
                 self.zooming_active = True
@@ -63,11 +56,10 @@ class ZoomingTest:
                 self.stable_distance = self.max_distance
                 self.zooming_active = True
                 print(f"[INFO] Zoom in gesture detected, stable distance set to {self.stable_distance}")
-        
+
         # Se lo zoom è attivo
         if self.zooming_active:
             if self.previous_distance is not None:
-                # Logica per zoom in o zoom out
                 if self.stable_distance == self.max_distance and current_distance < self.previous_distance:
                     # Zoom out quando la distanza diminuisce
                     normalized_zoom = self.normalize_zoom(current_distance)
@@ -82,7 +74,6 @@ class ZoomingTest:
         # Memorizza la distanza corrente per il confronto successivo
         self.previous_distance = current_distance
 
-
     def reset_zoom(self):
         """Resetta lo stato dello zoom gesture."""
         print("[INFO] Zoom gesture reset")
@@ -91,70 +82,65 @@ class ZoomingTest:
         self.zooming_active = False
         self.previous_distance = None
 
+    def execute(self, image):
+        """Esegue la logica di zoom durante la cattura del frame."""
+        # Inizializza MediaPipe Hands
+        mp_hands = mp.solutions.hands
+        hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1)
+        mp_drawing = mp.solutions.drawing_utils
+
+        # Inizializza la webcam
+        cap = cv2.VideoCapture(0)
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("[ERROR] Non è stato possibile acquisire il frame dalla webcam.")
+                break
+
+            # Converti il frame in RGB per MediaPipe
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = hands.process(frame_rgb)
+
+            if results.multi_hand_landmarks:
+                for hand_landmarks in results.multi_hand_landmarks:
+                    landmarks = hand_landmarks.landmark
+
+                    # Disegna i landmarks e il vettore tra il pollice e l'indice
+                    mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                    thumb_tip = landmarks[4]
+                    index_finger_tip = landmarks[8]
+
+                    # Calcola la distanza tra pollice e indice
+                    current_distance = self.calculate_distance(thumb_tip, index_finger_tip, frame.shape[1], frame.shape[0])
+
+                    # Processa il gesto di zoom solo quando le dita raggiungono la distanza minima o massima
+                    self.process_zoom(current_distance)
+
+                    # Applica lo zoom all'immagine
+                    zoomed_image = self.apply_zoom(image)
+                    cv2.imshow('Zoomed Image', zoomed_image)
+
+            else:
+                # Reset dello stato del gesto di zoom quando non ci sono mani
+                self.reset_zoom()
+
+            # Mostra il frame della webcam
+            cv2.imshow('Webcam', frame)
+
+            if cv2.waitKey(5) & 0xFF == 27:  # Esci premendo 'Esc'
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
 
 
-
-
-def main():
+# Esempio di utilizzo
+if __name__ == "__main__":
     image = cv2.imread('IMG_4224.JPG')  # Carica l'immagine da zoomare
 
     if image is None:
         print("[ERROR] Immagine non trovata.")
-        return
-
-    # Inizializza MediaPipe Hands
-    mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1)
-    mp_drawing = mp.solutions.drawing_utils
-
-    # Inizializza la classe ZoomingTest
-    zooming_test = ZoomingTest()
-
-    # Inizializza la webcam
-    cap = cv2.VideoCapture(0)
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("[ERROR] Non è stato possibile acquisire il frame dalla webcam.")
-            break
-
-        # Converti il frame in RGB per MediaPipe
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(frame_rgb)
-
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                landmarks = hand_landmarks.landmark
-
-                # Disegna i landmarks e il vettore tra il pollice e l'indice
-                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-                thumb_tip = landmarks[4]
-                index_finger_tip = landmarks[8]
-
-                # Calcola la distanza tra pollice e indice
-                currentDist = zooming_test.calculate_distance(thumb_tip, index_finger_tip, frame.shape[1], frame.shape[0])
-
-                # Processa il gesto di zoom solo quando le dita raggiungono la distanza minima o massima
-                zooming_test.process_zoom(currentDist)
-
-                # Applica lo zoom all'immagine
-                zoomed_image = zooming_test.apply_zoom(image)
-                cv2.imshow('Zoomed Image', zoomed_image)
-
-
-        else:
-            # Reset dello stato del gesto di zoom quando non ci sono mani
-            zooming_test.reset_zoom()
-
-        # Mostra il frame della webcam
-        cv2.imshow('Webcam', frame)
-
-        if cv2.waitKey(5) & 0xFF == 27:  # Esci premendo 'Esc'
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    main()
+    else:
+        zooming_controller = ZoomingController()
+        zooming_controller.execute(image)
