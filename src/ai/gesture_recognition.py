@@ -10,10 +10,9 @@ import joblib
 class GestureModelDetector:
     def __init__(self):
         self.class_labels = {
-            0: "Indice alzato",
-            1: "Indice e medio alzati",
-            2: "Zoom in",
-            3: "Zoom out"
+            0: "Index up",
+            1: "Index middle up",
+            2: "Zoom in \ Zoom out",
         }
         self.model_path =  'src/ai/model/gesture_recognition_model.pkl'
 

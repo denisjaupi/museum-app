@@ -7,10 +7,9 @@ import os
 ##########################################
 
 gesture_classes = {
-    0: "Indice in su",
-    1: "Indice e medio in su",
-    2: "Zoom in",
-    3: "Zoom out",
+    0: "Index up",
+    1: "Index middle up",
+    2: "Zoom in \ Zoom out",
 }
 
 ##########################################
@@ -21,7 +20,7 @@ hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_c
 mp_drawing = mp.solutions.drawing_utils
 
 # Directory to save collected data
-data_dir = os.path.join('ai', 'dataset')
+data_dir = os.path.join('src', 'ai', 'dataset')
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
