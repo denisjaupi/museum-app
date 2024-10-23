@@ -165,7 +165,7 @@ def main():
     gesture_interaction = GestureInteraction()
 
     # Carica un'immagine da visualizzare e zoomare (schermo intero)
-    image_path = 'IMG_4224.JPG'  # Sostituisci con il percorso reale dell'immagine
+    image_path = 'IMG_Test.JPG'  # Sostituisci con il percorso reale dell'immagine
     image = cv2.imread(image_path)
 
     # Imposta l'immagine su GestureInteraction per lo zoom

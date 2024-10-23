@@ -137,7 +137,7 @@ class ZoomingController:
 
 # Esempio di utilizzo
 if __name__ == "__main__":
-    image = cv2.imread('IMG_4224.JPG')  # Carica l'immagine da zoomare
+    image = cv2.imread('IMG_Test.JPG')  # Carica l'immagine da zoomare
 
     if image is None:
         print("[ERROR] Immagine non trovata.")
