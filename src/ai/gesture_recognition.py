@@ -6,13 +6,14 @@ import joblib
 # TODO:
 # Da migliorare le classi csv catturando nuovi dati. 
 # Zoom out è problematico e si confonde con indice alzato.
+# Da aggiungere una nuova classe per i gesti non classificati.
 
 class GestureModelDetector:
     def __init__(self):
         self.class_labels = {
             0: "Index up",
             1: "Index middle up",
-            2: "Zoom in \ Zoom out",
+            2: "Zoom in / Zoom out",
         }
         self.model_path =  'src/ai/model/gesture_recognition_model.pkl'
 

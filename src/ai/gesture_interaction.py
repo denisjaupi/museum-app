@@ -1,158 +1,46 @@
-import collections
-import time
-import pyautogui
 import cv2
 import mediapipe as mp
 import gesture_recognition as gr
 from utils import zooming_gesture as zg
+from utils import indexUp_gesture as ig
+from utils import indexMiddleUp_gesture as img
 
 
 class GestureInteraction:
 
-    def __init__(self, smoothing_factor=5):
-        # Ottieni dimensioni dello schermo
-        self.screen_width, self.screen_height = pyautogui.size()
-        # Coda per memorizzare le ultime 5 posizioni del dito
-        self.pointer_positions = collections.deque(maxlen=smoothing_factor)
+    def __init__(self):
+        self.image = None  # L'immagine per lo zoom
+        self.zoomed_image = None  # Immagine zoomata
 
-        self.last_position = None  # Posizione dell'immagine
-        
-        self.last_move_time = time.time() # Timer per il movimento del mouse
-
-        # Aggiungi ZoomingController per gestire lo zoom
-        self.zoom_controller = zg.ZoomingController()
-        self.image = None  # Immagine da zoomare
+        self.index_up_controller = ig.IndexUpController()
+        self.index_middle_up_controller = img.IndexMiddleUpController()
+        self.zooming_controller = zg.ZoomingController()
 
 
-    def set_image(self, image):
-        """Imposta l'immagine su cui applicare lo zoom."""
-        self.image = image
-
-################################################################################
-
-    def smooth(self, new_position):
-        self.pointer_positions.append(new_position)
-        avg_x = sum(pos[0] for pos in self.pointer_positions) / len(self.pointer_positions)
-        avg_y = sum(pos[1] for pos in self.pointer_positions) / len(self.pointer_positions)
-        return int(avg_x), int(avg_y)
-
-
-    def move_mouse(self, index_finger_coords):
-        current_time = time.time()
-        if current_time - self.last_move_time < 0.05:  # 50 ms di intervallo
-            return 
-
-        # Scala le coordinate della punta dell'indice rispetto alla risoluzione dello schermo
-        mouse_x = int(index_finger_coords.x * self.screen_width)
-        mouse_y = int(index_finger_coords.y * self.screen_height)
-        smoothed_x, smoothed_y = self.smooth((mouse_x, mouse_y))
-
-        pyautogui.moveTo(smoothed_x, smoothed_y)
-
-        # Aggiorna l'ultima posizione
-        self.last_position = (smoothed_x, smoothed_y)
-
-
-    def scroll(self, index_finger_coords):
-        # Scala le coordinate della punta dell'indice
-        scroll_x = int(index_finger_coords.x * self.screen_width)
-        scroll_y = int(index_finger_coords.y * self.screen_height)
-
-        if self.last_position is not None:
-            last_x, last_y = self.last_position
-            delta_x = last_x - scroll_x 
-            delta_y = last_y - scroll_y  
-
-            scroll_sensitivity = 1
-            # Ignora piccoli movimenti (10 pixel) per evitare scorrimenti indesiderati
-            if abs(delta_y) > 10:
-                pyautogui.scroll(int(delta_y * scroll_sensitivity))  # Scroll verticale
-            if abs(delta_x) > 10:
-                pyautogui.hscroll(int(delta_x * scroll_sensitivity))  # Scroll orizzontale
-
-        # Aggiorna l'ultima posizione
-        self.last_position = self.smooth((scroll_x, scroll_y))
-
-
-    def click(self, index_finger_coords):
-        current_time = time.time()
-
-        # Scala le coordinate della punta dell'indice
-        mouse_x, mouse_y = self.smooth((int(index_finger_coords.x * self.screen_width),
-                                        int(index_finger_coords.y * self.screen_height)))
-
-        # Controlla se il mouse è rimasto fermo nella stessa posizione
-        if self.last_position:
-            last_x, last_y = self.last_position
-
-            # Consideriamo il mouse fermo se la differenza è minore di una soglia, 5 pixel
-            if abs(mouse_x - last_x) < 5 and abs(mouse_y - last_y) < 5:
-                # Se il mouse è fermo per più di 3 secondi, esegui il click
-                if current_time - self.last_move_time > 2.5:
-                    pyautogui.click() 
-                    print("Click eseguito!")
-            else:
-                # Se il mouse si è mosso, aggiorna il timer
-                self.last_move_time = current_time
-
-        # Aggiorna l'ultima posizione del mouse
-        self.last_position = (mouse_x, mouse_y)
-
-
-################################################################################
-
-
-    def indexUp(self, landmarks):
-        index_finger_tip = landmarks[8]  # Punta dell'indice
-        self.move_mouse(index_finger_tip)
-        self.click(index_finger_tip)
-
-
-    def indexMiddleUp(self, landmarks):
-        index_finger_tip = landmarks[8] 
-        self.scroll(index_finger_tip)
-
-
-    def zoomGesture(self, landmarks):
-        """Attiva lo zoom solo se è presente un'immagine a schermo intero."""
-        if self.image is not None:  # Verifica se l'immagine è impostata
-            if landmarks:
-                index_finger_tip = landmarks[8]
-                thumb_tip = landmarks[4]
-
-                # Ottieni le dimensioni dell'immagine
-                image_height, image_width = self.image.shape[:2]
-
-                # Calcola la distanza tra indice e pollice
-                current_distance = self.zoom_controller.calculate_distance(
-                    thumb_tip, index_finger_tip, image_width, image_height)
-
-                # Processa lo zoom con la logica implementata
-                self.zoom_controller.process_zoom(current_distance)
-
-                # Applica il fattore di zoom all'immagine se esiste un'immagine
-                zoomed_image = self.zoom_controller.apply_zoom(self.image)
-                self.image = zoomed_image
-            else:
-                # Resetta lo stato dello zoom se non vengono rilevate mani
-                self.zoom_controller.reset_zoom()
+    def set_image(self, image_path):
+        self.image = cv2.imread(image_path)
+        if self.image is None:
+            print("[ERROR] Impossibile caricare l'immagine. Verifica il percorso.")
         else:
-            print("Zoom non attivato: nessuna immagine a schermo.")
+            print("[INFO] Immagine caricata con successo.")
 
 
-################################################################################
+    def get_zoomed_image(self):
+        return self.zoomed_image if self.zoomed_image is not None else self.image
 
 
     def handle_gesture(self, gesture_name, landmarks):
-        """Gestisci l'interazione basata sul gesto riconosciuto."""
-        if gesture_name == "Indice alzato" or gesture_name == "Indice ancora alzato":
-            self.indexUp(landmarks)
-        elif gesture_name == "Indice e medio alzati":
-            self.indexMiddleUp(landmarks)
-        elif gesture_name == "Zoom in" or gesture_name == "Zoom out":
-            self.zoomGesture(landmarks)
-
-################################################################################
+        if gesture_name == "Index up" or gesture_name == "Index still up":
+            print("[INFO] Esecuzione 'Index Up'")
+            self.index_up_controller.execute(landmarks)
+        elif gesture_name == "Index middle up":
+            print("[INFO] Esecuzione 'Index Middle Up'")
+            self.index_middle_up_controller.execute(landmarks)
+        elif gesture_name == "Zoom in / Zoom out":
+            print("[INFO] Esecuzione 'Zoom In/Out'")
+            self.zoomed_image = self.zooming_controller.execute(landmarks, self.image)
+        else:
+            print("[WARNING] Gesto non riconosciuto.")
 
 
 def main():
@@ -161,20 +49,13 @@ def main():
     hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1)
 
     # Inizializza il riconoscimento dei gesti e l'interazione
-    gesture_detector = gr.GestureModelDetector()
+    gesture_detector = gr.GestureModelDetector() 
     gesture_interaction = GestureInteraction()
 
     # Carica un'immagine da visualizzare e zoomare (schermo intero)
-    image_path = 'IMG_Test.JPG'  # Sostituisci con il percorso reale dell'immagine
-    image = cv2.imread(image_path)
+    image_path = 'IMG_Test.JPG'  
+    gesture_interaction.set_image(image_path)
 
-    # Imposta l'immagine su GestureInteraction per lo zoom
-    if image is not None:
-        gesture_interaction.set_image(image)
-        print("[INFO] Immagine caricata con successo per lo zoom.")
-    else:
-        print("[ERROR] Non è stato possibile caricare l'immagine.")
-    
     # Inizializza la webcam
     cap = cv2.VideoCapture(0)
 
@@ -191,31 +72,36 @@ def main():
         # Estrai i landmark delle mani dal risultato
         landmarks = gesture_detector.extract_landmarks(results)
 
-        ############################################################################################
-
         # Se sono presenti landmark, procedi al riconoscimento dei gesti
         if landmarks:
+
             # Prevedi il gesto usando il modello addestrato
             gesture_id = gesture_detector.predict_gesture(landmarks)
             gesture_name = gesture_detector.class_labels[gesture_id]
 
             # Verifica i gesti riconosciuti dal modello e gestisci le azioni
-            if gesture_name == "Indice alzato" or\
-                 gesture_name == "Indice e medio alzati" or\
-                     gesture_name == "Zoom in" or gesture_name == "Zoom out":
+            if gesture_name == "Index up" or\
+                 gesture_name == "Index middle up" or\
+                     gesture_name == "Zoom in / Zoom out":
                 gesture_interaction.handle_gesture(gesture_name, landmarks)
+
+                # Mostra l'immagine zoomata solo se c'è stato uno zoom
+                zoomed_image = gesture_interaction.get_zoomed_image()
+                if zoomed_image is not None:
+                    cv2.imshow('Zoomed Image', zoomed_image)
+
             else:
                 # Se non viene riconosciuto nessuno degli altri gesti, 
                 # controlla se l'indice è alzato per il movimento del mouse
                 if gesture_detector.is_index_finger_up(landmarks): 
-                    gesture_name = "Indice ancora alzato"
+                    gesture_name = "Index still up"
                     gesture_interaction.handle_gesture(gesture_name, landmarks)
                 else:
-                    gesture_name = "Gesto non riconosciuto"
+                    gesture_name = "Gesture not recognized"
+            
         else:
-            gesture_name = "Nessun gesto riconosciuto"
-
-        ############################################################################################
+            gesture_name = "Hand not detected"
+            gesture_interaction.zooming_controller.reset_zoom()
 
         # Disegna i landmarks sul frame e visualizza il nome del gesto
         if results.multi_hand_landmarks:
@@ -227,11 +113,6 @@ def main():
 
         # Mostra il frame
         cv2.imshow('Gesture Recognition', frame)
-
-        # Mostra l'immagine caricata in una finestra separata
-        if gesture_interaction.image is not None:
-            cv2.imshow('Zoomed Image', gesture_interaction.image)  # Finestra separata per l'immagine
-
 
         # Esci dal ciclo se premi ESC
         if cv2.waitKey(1) & 0xFF == 27:  

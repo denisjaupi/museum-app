@@ -82,65 +82,80 @@ class ZoomingController:
         self.zooming_active = False
         self.previous_distance = None
 
-    def execute(self, image):
-        """Esegue la logica di zoom durante la cattura del frame."""
-        # Inizializza MediaPipe Hands
-        mp_hands = mp.solutions.hands
-        hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1)
-        mp_drawing = mp.solutions.drawing_utils
+    def execute(self, landmarks, image):
+        print("[DEBUG] ZoomingController.execute chiamato")
+        """Esegue il controllo del gesto di zoom usando i landmarks 4 e 8."""
+        thumb_tip = landmarks[4]  # Punta del pollice
+        index_finger_tip = landmarks[8]  # Punta dell'indice
 
-        # Inizializza la webcam
-        cap = cv2.VideoCapture(0)
+        # Calcola la distanza tra pollice e indice
+        current_distance = self.calculate_distance(thumb_tip, index_finger_tip, image.shape[1], image.shape[0])
 
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                print("[ERROR] Non è stato possibile acquisire il frame dalla webcam.")
-                break
+        # Processa il gesto di zoom
+        self.process_zoom(current_distance)
 
-            # Converti il frame in RGB per MediaPipe
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = hands.process(frame_rgb)
+        # Applica lo zoom all'immagine
+        zoomed_image = self.apply_zoom(image)
 
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
-                    landmarks = hand_landmarks.landmark
-
-                    # Disegna i landmarks e il vettore tra il pollice e l'indice
-                    mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-                    thumb_tip = landmarks[4]
-                    index_finger_tip = landmarks[8]
-
-                    # Calcola la distanza tra pollice e indice
-                    current_distance = self.calculate_distance(thumb_tip, index_finger_tip, frame.shape[1], frame.shape[0])
-
-                    # Processa il gesto di zoom solo quando le dita raggiungono la distanza minima o massima
-                    self.process_zoom(current_distance)
-
-                    # Applica lo zoom all'immagine
-                    zoomed_image = self.apply_zoom(image)
-                    cv2.imshow('Zoomed Image', zoomed_image)
-
-            else:
-                # Reset dello stato del gesto di zoom quando non ci sono mani
-                self.reset_zoom()
-
-            # Mostra il frame della webcam
-            cv2.imshow('Webcam', frame)
-
-            if cv2.waitKey(5) & 0xFF == 27:  # Esci premendo 'Esc'
-                break
-
-        cap.release()
-        cv2.destroyAllWindows()
+        return zoomed_image  # Restituisce l'immagine zoomata
 
 
-# Esempio di utilizzo
-if __name__ == "__main__":
-    image = cv2.imread('IMG_Test.JPG')  # Carica l'immagine da zoomare
+
+def main():
+    # Inizializza MediaPipe Hands
+    mp_hands = mp.solutions.hands
+    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1)
+    mp_drawing = mp.solutions.drawing_utils
+
+    # Inizializza la classe ZoomingController
+    zooming_controller = ZoomingController()
+
+    # Carica l'immagine da zoomare
+    image_path = 'IMG_Test.JPG'
+    image = cv2.imread(image_path)
 
     if image is None:
         print("[ERROR] Immagine non trovata.")
-    else:
-        zooming_controller = ZoomingController()
-        zooming_controller.execute(image)
+        return
+
+    # Inizializza la webcam
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("[ERROR] Non è stato possibile acquisire il frame dalla webcam.")
+            break
+
+        # Converti il frame in RGB per MediaPipe
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = hands.process(frame_rgb)
+
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                landmarks = hand_landmarks.landmark
+
+                # Disegna i landmarks
+                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+                # Esegui il controllo del gesto di zoom
+                zoomed_image = zooming_controller.execute(landmarks, image)
+
+                # Mostra l'immagine zoomata
+                cv2.imshow('Zoomed Image', zoomed_image)
+
+        else:
+            # Reset dello stato del gesto di zoom quando non ci sono mani rilevate
+            zooming_controller.reset_zoom()
+
+        # Mostra il frame della webcam
+        cv2.imshow('Webcam', frame)
+
+        if cv2.waitKey(5) & 0xFF == 27:  # Esci premendo 'Esc'
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()
