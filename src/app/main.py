@@ -9,13 +9,16 @@ from views.info_opera_view import InfoOperaScreen
 class MyApp(App):
 
     def build(self):
-        # Carica il file KV manualmente
-        Builder.load_file('museum-app.kv')
+        # Carica i file KV per ciascuna schermata
+        Builder.load_file('views/welcome_screen.kv')
+        Builder.load_file('views/gallery_screen.kv')
+        Builder.load_file('views/opera_screen.kv')
+        Builder.load_file('views/info_opera_screen.kv')
 
-        # Creiamo lo ScreenManager
+        # Crea lo ScreenManager
         sm = ScreenManager()
 
-        # Aggiungiamo tutte le schermate al manager
+        # Aggiungi tutte le schermate al manager
         sm.add_widget(WelcomeScreen(name='benvenuto'))
         sm.add_widget(GalleryScreen(name='galleria'))
         sm.add_widget(OperaScreen(name='opera'))

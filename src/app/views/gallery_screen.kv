@@ -1,0 +1,106 @@
+<GalleryScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Header
+        BoxLayout:
+            size_hint_y: 0.2
+            orientation: 'horizontal'
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1  # Bianco
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            
+            BoxLayout:
+                size_hint_x: 0.3
+                Image:
+                    source: 'utils/IMG_Test3.png'
+                    allow_stretch: True
+                    keep_ratio: True
+
+            BoxLayout:
+                size_hint_x: 0.6
+
+            BoxLayout:
+                size_hint_x: 0.1
+                orientation: 'horizontal'
+                padding: [self.height * 0.2]
+
+                Spinner:
+                    text: 'IT'
+                    values: ['IT', 'EN', 'FR', 'DE']
+                    size_hint_x: None
+                    width: 100
+                    font_size: 20
+                    color: [1, 1, 1, 1]
+                    background_color: [0.447, 0.106, 0.157, 1]
+                    background_normal: ''
+                    background_down: ''
+
+        # Box centrale (bianca)
+        BoxLayout:
+            size_hint_y: 0.6
+            orientation: 'vertical'
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1  # Bianco
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            
+            Label:
+                text: 'Ispeziona'
+                font_size: 64
+                color: [0.447, 0.106, 0.157, 1]
+                size_hint_y: 0.1
+                halign: 'center'
+                valign: 'top'
+                text_size: self.size
+
+            # Layout principale con pulsanti laterali e griglia centrale
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: 0.6
+                padding: [20]
+
+                # Bottone per scorrere a sinistra
+                ScrollButton:
+                    text: '<'  # Usa l'icona di freccia o sostituisci con immagine
+                    on_release: root.scroll_left()
+                    size_hint: 0.1, 1
+                    background_normal: ''
+                    background_color: [0.9, 0.9, 0.9, 1]
+                    padding: [20, 20]  # Maggior padding
+
+                # Layout griglia con card
+                GridLayout:
+                    id: card_grid
+                    cols: 3
+                    spacing: 20
+                    padding: [20, 0, 20, 0]
+
+                # Bottone per scorrere a destra
+                ScrollButton:
+                    text: '>'
+                    on_release: root.scroll_right()
+                    size_hint: 0.1, 1
+                    background_normal: ''
+                    background_color: [0.9, 0.9, 0.9, 1]
+                    padding: [20, 20]  # Maggior padding
+
+        # Footer
+        BoxLayout:
+            size_hint_y: 0.2
+
+            TextInput:
+                id: footer_text
+                hint_text: ''
+                background_color: [0.447, 0.106, 0.157, 1]
+                foreground_color: [1, 1, 1, 1]
+                font_size: 36
+                multiline: True
+                readonly: True
+                size_hint: 1, 1
+                text: "Footer Text"

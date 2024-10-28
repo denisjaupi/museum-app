@@ -1,0 +1,12 @@
+
+<OperaScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Informazioni sull\'opera'
+        Button:
+            text: 'Vai ai dettagli'
+            on_release: app.root.current = 'info_opera'
+        Button:
+            text: 'Torna alla Galleria'
+            on_release: app.root.current = 'galleria'

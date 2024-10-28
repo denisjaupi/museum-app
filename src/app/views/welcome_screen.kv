@@ -114,7 +114,7 @@
             size_hint_y: 0.2
             padding: [self.width * 0.3, self.height * 0.2]
 
-            # Imposta lo sfondo bianco per l'intero header
+            # Imposta lo sfondo bordeaux per l'intero Footer
             canvas.before:
                 Color:
                     rgba: [0.447, 0.106, 0.157, 1]  # Bordeaux
@@ -131,47 +131,3 @@
                 color: 0, 0, 0, 1  # Testo nero
                 background_normal: ''  # Rimuove l'immagine di sfondo predefinita
                 on_release: app.root.current = 'galleria'
-
-
-
-
-
-
-
-
-
-<GalleryScreen>:
-    BoxLayout:
-        orientation: 'vertical'
-        Label:
-            text: 'Galleria delle Opere'
-        Button:
-            text: 'Seleziona un\'opera'
-            on_release: app.root.current = 'opera'
-        Button:
-            text: 'Torna alla schermata di Benvenuto'
-            on_release: app.root.current = 'benvenuto'
-
-<OperaScreen>:
-    BoxLayout:
-        orientation: 'vertical'
-        Label:
-            text: 'Informazioni sull\'opera'
-        Button:
-            text: 'Vai ai dettagli'
-            on_release: app.root.current = 'info_opera'
-        Button:
-            text: 'Torna alla Galleria'
-            on_release: app.root.current = 'galleria'
-
-<InfoOperaScreen>:
-    BoxLayout:
-        orientation: 'vertical'
-        Label:
-            text: 'Dettagli dell\'opera'
-        Button:
-            text: 'Torna all\'Opera'
-            on_release: app.root.current = 'opera'
-        Button:
-            text: 'Torna alla Galleria'
-            on_release: app.root.current = 'galleria'
