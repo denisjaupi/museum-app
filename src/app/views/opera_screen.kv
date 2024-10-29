@@ -1,12 +1,15 @@
-
 <OperaScreen>:
     BoxLayout:
         orientation: 'vertical'
-        Label:
-            text: 'Informazioni sull\'opera'
-        Button:
-            text: 'Vai ai dettagli'
-            on_release: app.root.current = 'info_opera'
-        Button:
-            text: 'Torna alla Galleria'
-            on_release: app.root.current = 'galleria'
+
+        # Sezione per l'immagine (80% dello spazio)
+        Image:
+            id: opera_image  # Aggiungi un ID per riferirsi a questo widget
+            source: ''  # Percorso dell'immagine verrà aggiornato dinamicamente
+            allow_stretch: True  # Permette di adattare l'immagine alle dimensioni del BoxLayout
+            size_hint_y: 0.8 
+
+        # Footer (20% dello spazio)
+        FooterField:
+            size_hint_y: 0.2  # Occupazione del 20% dello spazio verticale
+            id: footer_field  # Aggiungi un ID per fare riferimento a questo footer

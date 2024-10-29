@@ -82,6 +82,7 @@ class Card(ButtonBehavior, BoxLayout):
         super(Card, self).__init__(**kwargs)
         self.description = description
         self.gallery_screen = gallery_screen  # Salva il riferimento a GalleryScreen
+        self.image_source = image_source  # Salva anche il percorso dell'immagine
 
         self.orientation = 'vertical'
         self.padding = 20
@@ -116,7 +117,9 @@ class Card(ButtonBehavior, BoxLayout):
 
     def on_card_click(self, instance, touch):
         if self.collide_point(*touch.pos):
-            App.get_running_app().root.current = 'opera'
+            # Imposta l'immagine da visualizzare nell'OperaScreen
+            self.gallery_screen.manager.get_screen('opera').image_source = self.image_source
+            App.get_running_app().root.current = 'opera'  # Cambia a OperaScreen
 
     def on_card_hover(self, instance, touch):
         if self.collide_point(*Window.mouse_pos):
@@ -129,6 +132,7 @@ class Card(ButtonBehavior, BoxLayout):
             self.rect.pos = self.pos
             self.rect.size = self.size
             self.label.text_size = (self.width, None)
+
 
 class ScrollButton(Button):
     def __init__(self, **kwargs):
