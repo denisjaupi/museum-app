@@ -23,8 +23,10 @@ class MyApp(App):
         sm.add_widget(GalleryScreen(name='galleria'))
         sm.add_widget(OperaScreen(name='opera'))
         sm.add_widget(InfoOperaScreen(name='info_opera'))
+        
 
         return sm
 
 if __name__ == '__main__':
     MyApp().run()
+    

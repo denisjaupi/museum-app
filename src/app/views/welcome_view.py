@@ -62,7 +62,6 @@ class HeaderWidget(BoxLayout):
         self.logo_image.source = self.logo_source
         self.logo_image.reload()  # Ricarica l'immagine per applicare le modifiche
 
-
 class ContentWidget(BoxLayout):
     # Proprietà per il testo, immagine e dimensione del font del testo principale
     text_content = StringProperty("Il primo palazzo dei Medici, dove vissero Cosimo il Vecchio e Lorenzo il Magnifico e lavorarono artisti come Donatello, Michelangelo, Paolo Uccello, Benozzo Gozzoli e Botticelli.")

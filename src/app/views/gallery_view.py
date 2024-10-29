@@ -4,20 +4,18 @@ from kivy.uix.label import Label
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
-from kivy.properties import StringProperty, NumericProperty
+from kivy.properties import StringProperty, NumericProperty, ListProperty
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from kivy.uix.widget import Widget
-from kivy.properties import ListProperty
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
+from kivy.lang import Builder
+from kivy.uix.widget import Widget
 
 
 class HeaderWidget(BoxLayout):
-
-    # Proprietà per la sorgente dell'immagine del logo
-    logo_source = StringProperty('utils/IMG_Test3.png')  # Logo predefinito
+    logo_source = StringProperty('utils/IMG_Test3.png')
 
     def __init__(self, **kwargs):
         super(HeaderWidget, self).__init__(**kwargs)
@@ -25,16 +23,9 @@ class HeaderWidget(BoxLayout):
 
         # Sezione logo (30%)
         logo_layout = BoxLayout(size_hint_x=0.3, orientation='horizontal', padding=[20, 20, 20, 20])
-
-        # Aggiungi l'immagine del logo
         self.logo_image = Image(source=self.logo_source, allow_stretch=True, keep_ratio=True)
         logo_layout.add_widget(self.logo_image)
-
-        # Spacer per occupare lo spazio disponibile a destra
-        logo_spacer = BoxLayout(size_hint_x=1)  # Occupare tutto lo spazio disponibile
-        logo_layout.add_widget(logo_spacer)
-
-        # Aggiungi il layout del logo al widget principale
+        logo_layout.add_widget(BoxLayout(size_hint_x=1))  # Spacer
         self.add_widget(logo_layout)
 
         # Sezione centrale (40%)
@@ -43,41 +34,31 @@ class HeaderWidget(BoxLayout):
 
         # Sezione scelta lingua (30%)
         language_layout = BoxLayout(size_hint_x=0.3, orientation='horizontal', padding=[20, 20, 20, 20])
-
-        # Spacer per occupare lo spazio disponibile a sinistra
-        language_spacer = BoxLayout(size_hint_x=1)  # Occupare tutto lo spazio disponibile a sinistra
-        language_layout.add_widget(language_spacer)
-
-        # Spinner per la selezione della lingua
+        language_layout.add_widget(BoxLayout(size_hint_x=1))  # Spacer
         self.language_spinner = Spinner(
-            text='IT',  # Imposta la lingua predefinita
-            values=['IT', 'EN', 'FR', 'DE'],  # Le lingue selezionabili
+            text='IT',
+            values=['IT', 'EN', 'FR', 'DE'],
             size_hint_x=None,
             width=100,
             font_size=20,
-            color=[1, 1, 1, 1],  # Testo bianco
-            background_color=[0.447, 0.106, 0.157, 1],  # Sfondo Bordeaux 
-            background_normal='',  # Rimuove lo sfondo normale
-            background_down=''  # Rimuove lo sfondo quando è premuto
+            color=[1, 1, 1, 1],
+            background_color=[0.447, 0.106, 0.157, 1],
+            background_normal='',
+            background_down=''
         )
         language_layout.add_widget(self.language_spinner)
-
-        # Aggiungi il layout della lingua all'header
         self.add_widget(language_layout)
 
     def update_logo(self, new_logo_path):
-        """Aggiorna l'immagine del logo."""
         self.logo_source = new_logo_path
         self.logo_image.source = self.logo_source
-        self.logo_image.reload()  # Ricarica l'immagine per applicare le modifiche
+        self.logo_image.reload()
 
 class FooterField(BoxLayout):
     text = StringProperty("")
 
     def __init__(self, **kwargs):
         super(FooterField, self).__init__(**kwargs)
-        
-        # Inizializza il campo TextInput
         self.text_input = TextInput(
             hint_text='',
             background_color=[0.447, 0.106, 0.157, 1],
@@ -91,108 +72,74 @@ class FooterField(BoxLayout):
         self.add_widget(self.text_input)
 
     def update_text(self, new_text):
-        """Aggiorna il testo del footer."""
         self.text_input.text = new_text
 
 class Card(ButtonBehavior, BoxLayout):
-    
-    # Lista delle opere (ognuna rappresentata da un dizionario con immagine e descrizione)
-    card_data = ListProperty([
-        {'image_source': 'IMG_Test.jpg', 'description': "La Cappella dei Magi, affrescata da Benozzo Gozzoli. La Cappella dei Magi, affrescata da Benozzo Gozzoli. La Cappella dei Magi, affrescata da Benozzo Gozzoli. La Cappella dei Magi, affrescata da Benozzo Gozzoli."},
-        {'image_source': 'IMG_Test.jpg', 'description': "La Galleria terrena con sculture e stucchi."},
-        {'image_source': 'IMG_Test.jpg', 'description': "Gli scavi archeologici restituiscono storia."},
-        {'image_source': 'IMG_Test.jpg', 'description': "Una vista panoramica delle collezioni storiche."},
-
-    ])
-
-    visible_cards = 3
-    current_index = 0
-
-    """ Classe per le card, estende ButtonBehavior per renderle cliccabili. """
     description = StringProperty('')
-    font_size = NumericProperty(36) 
+    font_size = NumericProperty(36)
 
-    def __init__(self, image_source, description, **kwargs):
+    def __init__(self, image_source, description, gallery_screen, **kwargs):
         super(Card, self).__init__(**kwargs)
         self.description = description
+        self.gallery_screen = gallery_screen  # Salva il riferimento a GalleryScreen
 
-        # Imposta l'orientamento della Card e il padding
         self.orientation = 'vertical'
         self.padding = 20
-        self.spacing = 5  # Aggiungi un po' di spazio tra immagine e label
+        self.spacing = 5
 
-        # Sfondo grigio chiaro per la card
         with self.canvas.before:
-            Color(0.9, 0.9, 0.9, 1)  # Colore di sfondo grigio chiaro
-            self.rect = Rectangle(pos=self.pos, size=self.size)  # Inizializza il rettangolo
+            Color(0.9, 0.9, 0.9, 1)
+            self.rect = Rectangle(pos=self.pos, size=self.size)
 
-        # Immagine che occupa il 60% dello spazio
         self.image = Image(source=image_source, allow_stretch=True, keep_ratio=True, size_hint_y=0.8)
-
         self.label = Label(
             text=self.description,
             font_size=self.font_size,
-            padding = [20, 20],
+            padding=[20, 20],
             halign='left',
             valign='top',
-            size_hint_y=0.4,  # Occupare il 40% dell'altezza
-            text_size=(self.width, None),  # Permette di andare a capo
-            color=[0, 0, 0, 1],  # Testo nero
-            shorten=True,  # Abilita il troncamento
-            shorten_from='right'  # Troncamento dal lato destro
+            size_hint_y=0.2,
+            text_size=(self.width, None),
+            color=[0, 0, 0, 1],
+            shorten=True,
+            shorten_from='right'
         )
 
-        # Aggiungi immagine e label alla card
         self.add_widget(self.image)
         self.add_widget(self.label)
 
-        # Rendi la card cliccabile
         self.bind(on_touch_down=self.on_card_click)
-        self.bind(size=self._update_rect)  # Aggiorna il rettangolo quando la dimensione cambia
-        self.bind(pos=self._update_rect)  # Aggiorna il rettangolo quando la posizione cambia
+        self.bind(size=self._update_rect)
+        self.bind(pos=self._update_rect)
 
-        Window.bind(mouse_pos=self.on_card_hover)  # Controlla l'hover del mouse
+        Window.bind(mouse_pos=self.on_card_hover)
 
     def on_card_click(self, instance, touch):
-        """ Gestisce il clic sulla card. """
         if self.collide_point(*touch.pos):
             App.get_running_app().root.current = 'opera'
-            print(f'Card clicked: {self.description}')
 
     def on_card_hover(self, instance, touch):
-        """Gestisce l'hover della card."""
-        app = App.get_running_app()
-        # Controlla se footer_text è presente
-        if hasattr(app.root.ids, 'footer_text'):
-            if self.collide_point(*touch):
-                print(f'Card hovered: {self.description}')
-                app.root.ids.footer_text.update_text(self.description)
-            else:
-                app.root.ids.footer_text.update_text("")
-        else:
-            print("ID footer_text non trovato.")
-
-
+        if self.collide_point(*Window.mouse_pos):
+            footer = self.gallery_screen.ids.footer
+            if footer:
+                footer.update_text(self.description)
 
     def _update_rect(self, instance, value):
-        """ Aggiorna la posizione e le dimensioni del rettangolo di sfondo. """
-        if hasattr(self, 'rect'):  # Controlla se l'attributo rect esiste
+        if hasattr(self, 'rect'):
             self.rect.pos = self.pos
             self.rect.size = self.size
-            self.label.text_size = (self.width, None)  # Aggiorna il text_size della label
+            self.label.text_size = (self.width, None)
 
 class ScrollButton(Button):
     def __init__(self, **kwargs):
         super(ScrollButton, self).__init__(**kwargs)
 
 class GalleryScreen(Screen):
-    # Lista delle opere (ognuna rappresentata da un dizionario con immagine e descrizione)
     card_data = ListProperty([
-        {'image_source': 'IMG_Test.jpg', 'description': "La Cappella dei Magi, affrescata da Benozzo Gozzoli."},
-        {'image_source': 'IMG_Test.jpg', 'description': "La Galleria terrena con sculture e stucchi."},
-        {'image_source': 'IMG_Test.jpg', 'description': "Gli scavi archeologici restituiscono storia."},
-        {'image_source': 'IMG_Test.jpg', 'description': "Una vista panoramica delle collezioni storiche."},
-
+        {'image_source': 'utils/IMG_Test.jpg', 'description': "La Cappella dei Magi è un piccolo ambiente posto nel cuore del palazzo, al primo piano. Progettato da Michelozzo, è costituito da un’aula quadrata e da una scarsella sopraelevata per l’altare. L’accesso avveniva da due ingressi: uno privato, per la famiglia, e uno pubblico per accogliere gli ospiti. Il soffitto ligneo, opera di Pagno di Lapo, è finemente intagliato e dorato e sembra specchiarsi, per impianto e forme, sul pregiato pavimento in marmi policromi commessi. Gli affreschi sulle pareti furono realizzati da Benozzo Gozzoli dal 1459 e rappresentano il viaggio dei Magi verso Gesù bambino, raffigurato nella pala d’altare eseguita dalla bottega di Filippo Lippi. Partendo dalla parete est, il corteo avanza con Gaspare (in bianco), poi con Baldassarre (in verde) sulla parete sud, infine con Melchiorre (in rosso) sulla parete ovest. Alla straordinaria ricchezza dei dettagli e degli ornamenti si accompagna l’accurata raffigurazione del paesaggio e di personaggi del tempo posti entro il corteo sacro: fra questi spiccano Cosimo e Piero de’ Medici, i giovani Lorenzo e Giuliano, Gian Galeazzo Sforza e Sigismondo Pandolfo Malatesta, papa Pio II Piccolomini."},
+        {'image_source': 'utils/IMG_Test4.jpg', 'description': "Tra le opere esposte a Palazzo Medici Riccardi una delle più celebri è la Madonna con il Bambino, realizzata intorno agli anni Sessanta del Quattrocento da Filippo Lippi. Dopo averne perso a lungo le tracce, il dipinto venne ritrovato nel 1907 presso l’Ospedale di San Salvi a Firenze e  qui trasferito l’anno successivo, ipotizzandone la committenza medicea: questa supposizione fu in parte confermata dal fatto che l’opera proveniva da Castel Pulci, residenza di proprietà dei Riccardi e a loro volta acquirenti del palazzo mediceo. Il dipinto, raffigurante la Madonna che si accosta dolcemente alla guancia del Bambino, riprende una composizione tipica del Rinascimento fiorentino, che il Lippi rappresenta con grazia e naturalezza. L’opera fu molto ammirata e copiata proprio per i suoi preziosi effetti di luce e per l’eleganza delle linee di contorno. È osservabile anche il retro della tavola, che mostra un disegno preparatorio di testa maschile."},
+        {'image_source': 'utils/IMG_Test5.jpg', 'description': "La Galleria del palazzo e l’attigua Biblioteca furono edificate tra il 1670 e il 1677 per volontà della famiglia Riccardi; a sovrintendere i lavori fu inizialmente l’architetto Pier Maria Baldi, sostituito poi da Giovan Battista Foggini. La decorazione della volta della Galleria iniziò solo nell’estate del 1682, quando Luca Giordano accolse la proposta del marchese Francesco Riccardi, per concludersi nel 1685. Il ricco e colto programma iconografico, concepito senza soluzione di continuità sull’intera superficie voltata, è declinato con un vastissimo numero di figure e una cromia chiara e luminosa."},
+        {'image_source': 'utils/IMG_Test6.jpg', 'description': "Il Museo dei Marmi espone una selezione di opere scultoree provenienti dalle collezioni antiquarie della famiglia Riccardi, appassionati collezionisti di marmi antichi, qui trasferite dalla precedente villa di Gualfonda. Quando il palazzo, nel 1810, venne alienato al demanio, solo una parte della collezione Riccardi fu trasferita nelle collezioni pubbliche, mentre il resto rimase all’interno dell’edificio ed è oggi visibile tra il Museo dei Marmi e il percorso di visita al primo piano. Si tratta soprattutto di busti marmorei di età romana raffiguranti saggi, eroi, imperatori o dei: fra questi l’imperatore Caracalla, Vibia Sabina, Euripide, Anacreonte, Sofocle e il superbo busto di atleta. Vi sono anche i calchi in gesso dei busti di Augusto e di Agrippa, i cui originali furono donati da papa Sisto IV a Lorenzo il Magnifico nel 1471, e quelli di Caligola e Nerone, acquistati dai Riccardi nel 1669; tutti gli originali sono conservati alle Gallerie degli Uffizi."},
     ])
 
     visible_cards = 3
@@ -203,36 +150,24 @@ class GalleryScreen(Screen):
         self.update_cards()
 
     def update_cards(self):
-        # Svuota la griglia prima di riempirla di nuovo
         self.ids.card_grid.clear_widgets()
-
-        # Calcola l'indice finale e seleziona le opere da visualizzare
         end_index = self.current_index + self.visible_cards
         cards_to_display = self.card_data[self.current_index:end_index]
 
-        # Aggiungi le card alla griglia
         for data in cards_to_display:
-            card = Card(image_source=data['image_source'], description=data['description'])
+            card = Card(image_source=data['image_source'], description=data['description'], gallery_screen=self)
             self.ids.card_grid.add_widget(card)
 
-        # Aggiungi spazi vuoti per riempire i posti mancanti, se meno di 3 card
         empty_slots = self.visible_cards - len(cards_to_display)
         for _ in range(empty_slots):
-            self.ids.card_grid.add_widget(Widget())  # Widget vuoto per riempire gli spazi mancanti
+            self.ids.card_grid.add_widget(Widget())
 
     def scroll_left(self):
         if self.current_index > 0:
-            # Diminuisce di 3 l'indice corrente per visualizzare il gruppo precedente
             self.current_index -= self.visible_cards
             self.update_cards()
 
     def scroll_right(self):
-        # Incrementa di 3 l'indice corrente per visualizzare il prossimo gruppo
         if self.current_index + self.visible_cards < len(self.card_data):
             self.current_index += self.visible_cards
             self.update_cards()
-
-
-
-
-

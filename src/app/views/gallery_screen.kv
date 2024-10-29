@@ -1,4 +1,5 @@
 <GalleryScreen>:
+
     BoxLayout:
         orientation: 'vertical'
 
@@ -38,14 +39,42 @@
                     pos: self.pos
                     size: self.size
             
-            Label:
-                text: 'Ispeziona'
-                font_size: 64
-                color: [0.447, 0.106, 0.157, 1]
-                size_hint_y: 0.2
-                halign: 'center'
-                valign: 'top'
-                text_size: self.size
+            # BoxLabel per Ispeziona e Back Button
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: 0.2  # Riserva solo 20% dell'altezza totale
+                padding: [20]
+
+                # Colonna sinistra per il Back Button
+                BoxLayout:
+                    size_hint_x: 0.075  # 8.5% dello spazio orizzontale
+                    orientation: 'horizontal'
+
+                    Button:
+                        text: 'Back'
+                        on_release: app.root.current = 'benvenuto'  # Cambia a welcome_screen
+                        size_hint: (1, 1)  # Riempi tutto lo spazio disponibile
+                        background_normal: ''
+                        background_color: [0.9, 0.9, 0.9, 1]
+                        padding: [20, 20]  # Maggior padding
+
+                Widget:
+                    size_hint_x: None  # Imposta size_hint_x a None per controllare la larghezza
+                    width: 20 
+
+                # Colonna destra per la Label Ispeziona
+                BoxLayout:
+                    size_hint_x: 0.825  # 81.5% dello spazio orizzontale
+                    orientation: 'horizontal'
+
+                    Label:
+                        text: 'Ispeziona'
+                        font_size: 64
+                        color: [0.447, 0.106, 0.157, 1]
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: (1, 1)  # Riempi tutto lo spazio disponibile
 
             # Layout principale con pulsanti laterali e griglia centrale
             BoxLayout:
@@ -80,8 +109,7 @@
 
 ###################################################################
 
-
         # Footer
         FooterField:
-            id: footer_text
+            id: footer
             size_hint_y: 0.2
