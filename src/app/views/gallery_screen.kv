@@ -2,10 +2,14 @@
     BoxLayout:
         orientation: 'vertical'
 
-        # Header
+###################################################################
+        
+        # Header - 20% dello spazio totale (con 3 sezioni interne)
         BoxLayout:
             size_hint_y: 0.2
             orientation: 'horizontal'
+
+            # Canvas per impostare lo sfondo bianco dell'header
             canvas.before:
                 Color:
                     rgba: 1, 1, 1, 1  # Bianco
@@ -13,31 +17,15 @@
                     pos: self.pos
                     size: self.size
             
-            BoxLayout:
-                size_hint_x: 0.3
-                Image:
-                    source: 'utils/IMG_Test3.png'
-                    allow_stretch: True
-                    keep_ratio: True
+            # Sezione logo (30%)
+            HeaderWidget:
+                id: header_widget  # Aggiungi l'ID per riferimento
 
-            BoxLayout:
-                size_hint_x: 0.6
 
-            BoxLayout:
-                size_hint_x: 0.1
-                orientation: 'horizontal'
-                padding: [self.height * 0.2]
 
-                Spinner:
-                    text: 'IT'
-                    values: ['IT', 'EN', 'FR', 'DE']
-                    size_hint_x: None
-                    width: 100
-                    font_size: 20
-                    color: [1, 1, 1, 1]
-                    background_color: [0.447, 0.106, 0.157, 1]
-                    background_normal: ''
-                    background_down: ''
+
+###################################################################
+
 
         # Box centrale (bianca)
         BoxLayout:
@@ -54,7 +42,7 @@
                 text: 'Ispeziona'
                 font_size: 64
                 color: [0.447, 0.106, 0.157, 1]
-                size_hint_y: 0.1
+                size_hint_y: 0.2
                 halign: 'center'
                 valign: 'top'
                 text_size: self.size
@@ -62,7 +50,7 @@
             # Layout principale con pulsanti laterali e griglia centrale
             BoxLayout:
                 orientation: 'horizontal'
-                size_hint_y: 0.6
+                size_hint_y: 0.8
                 padding: [20]
 
                 # Bottone per scorrere a sinistra
@@ -90,17 +78,10 @@
                     background_color: [0.9, 0.9, 0.9, 1]
                     padding: [20, 20]  # Maggior padding
 
-        # Footer
-        BoxLayout:
-            size_hint_y: 0.2
+###################################################################
 
-            TextInput:
-                id: footer_text
-                hint_text: ''
-                background_color: [0.447, 0.106, 0.157, 1]
-                foreground_color: [1, 1, 1, 1]
-                font_size: 36
-                multiline: True
-                readonly: True
-                size_hint: 1, 1
-                text: "Footer Text"
+
+        # Footer
+        FooterField:
+            id: footer_text
+            size_hint_y: 0.2

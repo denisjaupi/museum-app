@@ -18,39 +18,9 @@
                     size: self.size
             
             # Sezione logo (30%)
-            BoxLayout:
-                size_hint_x: 0.3
-                Image:
-                    source: 'utils/IMG_Test3.png'  
-                    allow_stretch: True
-                    keep_ratio: True
+            HeaderWidget:
+                id: header_widget  # Aggiungi l'ID per riferimento
 
-            # Sezione centrale (60%)
-            BoxLayout:
-                size_hint_x: 0.6
-
-
-            # Sezione scelta lingua (10%)
-            BoxLayout:
-                size_hint_x: 0.1
-                orientation: 'horizontal'
-                padding: [self.height * 0.2]
-
-                # Spinner per la selezione della lingua
-                Spinner:
-                    text: 'IT'  # Imposta la lingua predefinita
-                    values: ['IT', 'EN', 'FR', 'DE']  # Le lingue selezionabili
-                    size_hint_x: None
-                    width: 100
-                    font_size: 20
-
-                    # Imposta il colore del testo e lo sfondo del Spinner
-                    color: [1, 1, 1, 1]  # Testo bianco
-                    background_color: [0.447, 0.106, 0.157, 1]  # Sfondo Bordeaux 
-
-                    # Sfondo del Spinner in stato normale e premuto
-                    background_normal: ''  # Rimuove lo sfondo normale
-                    background_down: ''  # Rimuove lo sfondo quando è premuto
 
 
 
@@ -58,55 +28,17 @@
 
         # Grid principale - 60% dello spazio
         GridLayout:
+            id: main_grid
             size_hint_y: 0.6
-            cols: 2
+            cols: 1
             spacing: 10
-
-            # Impostiamo lo sfondo bianco con canvas
             canvas.before:
                 Color:
                     rgba: 1, 1, 1, 1  # Bianco
                 Rectangle:
                     pos: self.pos
                     size: self.size
-
-            # Colonna di sinistra (testo)
-            BoxLayout:
-                orientation: 'vertical'
-                padding: [self.width * 0.2, self.height * 0.3]
-                canvas.before:
-                    Color:
-                        rgba: 1, 1, 1, 1  # Sfondo bianco anche per la colonna
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-
-                Label:
-                    text: 'Il primo palazzo dei Medici, dove vissero Cosimo il Vecchio e Lorenzo il Magnifico e lavorarono artisti come Donatello, Michelangelo, Paolo Uccello, Benozzo Gozzoli e Botticelli'
-                    font_size: 24
-                    halign: 'center'
-                    valign: 'middle'
-                    text_size: self.width, None  # Fa andare il testo a capo quando raggiunge il bordo
-                    size_hint_y: None
-                    height: self.texture_size[1] + 20
-                    color: [0, 0, 0, 1]  # Testo nero
-
-                Label:
-                    text: 'Dove tutto ebbe inizio.'
-                    font_size: 30
-                    halign: 'center'
-                    valign: 'middle'
-                    text_size: self.width, None
-                    size_hint_y: None
-                    height: self.texture_size[1] + 20
-                    color: [0, 0, 0, 1]  # Testo nero
-
-            # Colonna di destra (immagine)
-            Image:
-                source: 'utils/IMG_Test2.png'  
-                allow_stretch: True
-                keep_ratio: True
-
+                    
 ###################################################################
 
         # Footer - 20% dello spazio totale 
@@ -121,10 +53,11 @@
                 Rectangle:
                     pos: self.pos
                     size: self.size
+                    
 
             Button:
                 text: 'Inizia la visita!'
-                font_size: 24
+                font_size: self.height * 0.4
                 halign: 'center'
                 valign: 'middle'
                 background_color: 1, 1, 1, 1  # Sfondo bianco
