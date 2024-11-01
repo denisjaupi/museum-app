@@ -1,5 +1,7 @@
 import cv2
 import mediapipe as mp
+import numpy as np
+import pyautogui
 import gesture_recognition as gr
 from utils import zooming_gesture as zg
 from utils import indexUp_gesture as ig
@@ -16,14 +18,12 @@ class GestureInteraction:
         self.index_middle_up_controller = img.IndexMiddleUpController()
         self.zooming_controller = zg.ZoomingController()
 
-
-    def set_image(self, image_path):
-        self.image = cv2.imread(image_path)
-        if self.image is None:
-            print("[ERROR] Impossibile caricare l'immagine. Verifica il percorso.")
-        else:
-            print("[INFO] Immagine caricata con successo.")
-
+    def capture_screen(self):
+        # Cattura uno screenshot e convertilo in un'immagine OpenCV
+        screenshot = pyautogui.screenshot()
+        screenshot_np = np.array(screenshot)
+        self.image = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
+        print("[INFO] Screenshot catturato con successo.")
 
     def get_zoomed_image(self):
         return self.zoomed_image if self.zoomed_image is not None else self.image
@@ -53,8 +53,9 @@ def main():
     gesture_interaction = GestureInteraction()
 
     # Carica un'immagine da visualizzare e zoomare (schermo intero)
-    image_path = 'IMG_Test.JPG'  
-    gesture_interaction.set_image(image_path)
+    # image_path = 'src/app/utils/IMG_Test.jpg'  
+    # gesture_interaction.set_image(image_path)
+    gesture_interaction.capture_screen()
 
     # Inizializza la webcam
     cap = cv2.VideoCapture(0)
