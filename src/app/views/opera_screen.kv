@@ -1,33 +1,81 @@
 <OperaScreen>:
+
     BoxLayout:
+
         orientation: 'vertical'
-        
-        # Sezione immagine (80% dello schermo)
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1  # Bianco
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # Sezione immagine (75% dello schermo)
         BoxLayout:
             id: main_box
-            size_hint_y: 0.8
+            size_hint_y: 0.75
             padding: 10
             orientation: 'horizontal'
-            
+
             BoxLayout:
                 id: left_box
                 size_hint_x: 0.2
-                
-            # Usiamo RelativeLayout per centrare l'OperaImageViewer
+
+            # Usiamo RelativeLayout per centrare l'OperaImageViewer e per le annotazioni
             RelativeLayout:
                 id: image_box
                 size_hint_x: 0.6
-            
+
+                # Inseriamo direttamente OperaImageViewer nel RelativeLayout
                 OperaImageViewer:
                     id: opera_scatter
-                    # Rimuoviamo size_hint_x poiché verrà gestito nel codice Python
                     pos_hint: {'center_x': .5, 'center_y': .5}
-                    
+                    size_hint: None, None # Lasciamo che si adatti alle dimensioni dell'immagine
+            
             BoxLayout:
                 id: right_box
                 size_hint_x: 0.2
         
+        # Sezione immagine (10% dello schermo)
+        BoxLayout:
+            id: button_box
+            size_hint_y: 0.1
+            padding: 10
+            orientation: 'horizontal'
+            
+            BoxLayout:
+                id: leftButt_box
+                size_hint_x: 0.15
+                
+                Button:
+                    text: ' < Parete ovest'
+                    font_size: self.height * 0.4
+                    halign: 'center'
+                    valign: 'middle'
+                    background_normal: ''
+                    padding: 10
+                    background_color: [0.9, 0.9, 0.9, 1]
+                    on_release: app.root.current = 'opera'
+            
+            BoxLayout:
+                id: centerButt_box
+                size_hint_x: 0.7
+            
+            BoxLayout:
+                id: rightButt_box
+                size_hint_x: 0.15
+                
+                Button:
+                    text: 'Parete nord >'
+                    font_size: self.height * 0.4
+                    halign: 'center'
+                    valign: 'middle'
+                    background_normal: ''
+                    padding: 10
+                    background_color: [0.9, 0.9, 0.9, 1]
+                    on_release: app.root.current = 'opera'
+        
         # Footer (20% dello schermo)
         FooterField:
             id: footer_field
-            size_hint_y: 0.2
+            size_hint_y: 0.15
