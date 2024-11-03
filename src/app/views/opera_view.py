@@ -1,15 +1,18 @@
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import StringProperty, ListProperty, ObjectProperty
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.scatter import Scatter
+from kivy.uix.image import Image
+from kivy.clock import Clock
 
 
 class FooterField(BoxLayout):
-    text = StringProperty("")
-
+    """Widget per il campo di testo a piè di pagina"""
+    
     def __init__(self, **kwargs):
-        super(FooterField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.text_input = TextInput(
             hint_text='',
             background_color=[0.447, 0.106, 0.157, 1],
@@ -17,101 +20,148 @@ class FooterField(BoxLayout):
             font_size=36,
             multiline=True,
             readonly=True,
-            size_hint=(1, 1),
-            text=self.text
+            size_hint=(1, 1)
         )
         self.add_widget(self.text_input)
 
     def update_text(self, new_text):
+        """Aggiorna il testo visualizzato"""
         self.text_input.text = new_text
 
 
+class OperaImageViewer(Scatter):
+    """Visualizzatore dell'immagine dell'opera"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.do_rotation = False
+        self.do_translation = True
+        self.do_scale = True
+        self.scale_min = 1
+        self.scale_max = 3
+        
+        # Creazione dell'immagine
+        self.image = Image(
+            allow_stretch=True,
+            keep_ratio=True,
+            size_hint=(None, None),
+            pos_hint={'center_x': 0.5, 'center_y': 0.5}
+        )
+        self.add_widget(self.image)
+        
+        self.layout_triggered = False
+
+    def load_image(self, source):
+        """Carica una nuova immagine"""
+        self.image.source = source
+        self.image.reload()
+        Clock.schedule_once(lambda dt: self.update_layout(), 0.1)
+        
+    def update_layout(self, *args):
+        """Gestisce l'aggiornamento del layout in modo più efficiente"""
+        if not self.image.texture or self.layout_triggered:
+            return
+            
+        self.layout_triggered = True
+        
+        container_width = self.parent.width if self.parent else 100
+        container_height = self.parent.height if self.parent else 100
+        container_ratio = container_width / container_height
+        
+        image_ratio = self.image.texture.width / self.image.texture.height
+        
+        if image_ratio > container_ratio:
+            target_width = container_width
+            target_height = container_width / image_ratio
+        else:
+            target_height = container_height
+            target_width = container_height * image_ratio
+            
+        self.image.size = (target_width, target_height)
+        self.size = (target_width, target_height)
+        
+        if self.parent:
+            self.pos = (
+                self.parent.center_x - target_width / 2,
+                self.parent.center_y - target_height / 2
+            )
+        
+        self.layout_triggered = False
+            
+    def on_size(self, *args):
+        """Risponde ai cambiamenti di dimensione"""
+        Clock.schedule_once(lambda dt: self.update_layout(), 0)
+
+    def clear_annotations(self):
+        """Rimuove tutte le annotazioni esistenti"""
+        for child in list(self.children):
+            if isinstance(child, Button):
+                self.remove_widget(child)
+                
+    def add_annotation(self, x, y, text, callback):
+        """Aggiunge un'annotazione alla posizione specificata"""
+        # Create a button to act as an annotation
+        btn = Button(
+            text='',
+            size_hint=(None, None),
+            size=(50, 50),  # Adjust size if needed
+            pos=(x, y),  # Position where you want the annotation
+            background_color=(1, 0, 0, 0.5),
+            on_release=lambda btn: callback(text)
+        )
+        # Add the button to the parent layout instead of Scatter
+        if self.parent:  # Check if there is a parent layout to add to
+            self.parent.add_widget(btn)
+
+
 class OperaScreen(Screen):
+    """Schermata principale per la visualizzazione dell'opera d'arte"""
     image_source = StringProperty('')
     annotations = ListProperty([])
-
-    def on_pre_enter(self, *args):
-        """Metodo chiamato prima che la schermata venga mostrata; carica i dettagli dell'opera"""
-        self.load_opera_details()  # Carica immagine e annotazioni
-        self.update_image()
-        self.add_annotations()
-
-        # Stampa le dimensioni per il debug
-        print("Dimensioni del BoxLayout principale:", self.size)
-        print("Dimensioni del FooterField:", self.ids.footer_field.size)
-        print("Dimensioni del Scatter:", self.ids.opera_scatter.size)
-        print("Dimensioni dell'immagine:", self.ids.opera_image.size)
-
-
-
+    viewer = ObjectProperty(None)
+    
+    def on_pre_enter(self):
+        """Inizializza la schermata quando viene mostrata"""
+        self.load_opera_details()
+        self.update_display()
+        
     def load_opera_details(self):
-        """Carica i dettagli dell'opera, come immagine e annotazioni."""
-        # Imposta il percorso dell'immagine
+        """Carica i dettagli dell'opera e le annotazioni"""
         self.image_source = 'utils/IMG_Test.jpg'
-
-        # Carica le annotazioni (coordinate e descrizioni)
         self.annotations = [
             {'x': 100, 'y': 100, 'text': 'Dettaglio 1: Descrizione del dettaglio.'},
-            {'x': 200, 'y': 200, 'text': 'Dettaglio 2: Un altro dettaglio interessante.'},
-            # Aggiungi altre annotazioni
+            {'x': 200, 'y': 200, 'text': 'Dettaglio 2: Un altro dettaglio interessante.'}
         ]
-
-    def update_image(self):
-        """Aggiorna l'immagine nel widget Image e la adatta allo spazio disponibile in modo proporzionato."""
-        self.ids.opera_image.source = self.image_source
-        self.ids.opera_image.reload()
-
-        # Ottieni dimensioni del BoxLayout principale e del FooterField in pixel
-        main_layout_width, main_layout_height = self.ids.image_box.size
-        footer_height = self.ids.footer_field.height
-        available_height = main_layout_height - footer_height
-
-        # Imposta lo Scatter per usare tutto lo spazio disponibile
-        self.ids.opera_scatter.size = (main_layout_width, available_height)
-        scatter_width, scatter_height = self.ids.opera_scatter.size
-
-        # Dimensioni della texture dell'immagine in pixel
-        img_width, img_height = self.ids.opera_image.texture_size
-
-        # Fattore di scala proporzionato (ad esempio 2 o 3)
-        scale_factor = min(scatter_width / img_width, scatter_height / img_height) * 14
-
-        # Calcola le nuove dimensioni dell'immagine con il fattore moderato
-        new_width = img_width * scale_factor
-        new_height = img_height * scale_factor
-        self.ids.opera_image.size = (new_width, new_height)
-
-        # Centra l'immagine nello Scatter
-        self.ids.opera_image.pos_hint = {'center_x': 0.5, 'center_y': 0.5}
-
-        # Debug: stampa per verificare le dimensioni finali
-        print(f"Image Size (Texture): {img_width}x{img_height}")
-        print(f"Scaled Image Size: {new_width}x{new_height}")
-        print(f"Scatter Size (Box): {scatter_width}x{scatter_height}")
-        print(f"Dimensioni del BoxLayout principale: {main_layout_width}x{main_layout_height}")
-        print(f"Dimensioni del FooterField: {footer_height}")
-        print(f"Dimensioni dell'immagine: {self.ids.opera_image.size}")
-
-    def add_annotations(self):
-        """Aggiunge le box interattive di annotazione sopra l'immagine"""
-        scatter = self.ids.opera_scatter
-
-        # Rimuove annotazioni precedenti (se ce ne sono)
-        for child in scatter.children[:]:
-            if isinstance(child, Button):
-                scatter.remove_widget(child)
-
-        # Aggiunge ogni annotazione come un bottone posizionabile
+        
+    def update_display(self):
+        """Aggiorna la visualizzazione dell'opera e delle annotazioni"""
+        self.viewer = self.ids.opera_scatter
+        self.viewer.load_image(self.image_source)
+        
+        self.viewer.clear_annotations()
         for annot in self.annotations:
-            btn = Button(
-                size_hint=(None, None),
-                size=(50, 50),
-                pos=(annot['x'], annot['y']),
-                background_color=(1, 0, 0, 0.5),
-                on_release=lambda btn, txt=annot['text']: self.show_annotation_text(txt)
+            self.viewer.add_annotation(
+                annot['x'],
+                annot['y'],
+                annot['text'],
+                self.show_annotation_text
             )
-            scatter.add_widget(btn)
-
+            
     def show_annotation_text(self, text):
-        """Aggiorna il testo nella FooterField con il dettaglio dell'annotazione selezionata"""
+        """Mostra il testo dell'annotazione nel footer"""
+        print(f"Updating footer text with: {text}")
         self.ids.footer_field.update_text(text)
+
+    def update_display(self):
+        """Aggiorna la visualizzazione dell'opera e delle annotazioni"""
+        self.viewer = self.ids.opera_scatter
+        self.viewer.load_image(self.image_source)
+        
+        self.viewer.clear_annotations()
+        for annot in self.annotations:
+            self.viewer.add_annotation(
+                annot['x'],
+                annot['y'],
+                annot['text'],
+                self.show_annotation_text
+            )

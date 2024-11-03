@@ -1,35 +1,33 @@
 <OperaScreen>:
     BoxLayout:
         orientation: 'vertical'
-
-
-        # Sezione dedicata all'immagine con zoom e movimento, occupa l'80% dello schermo
-        BoxLayout:
-            id: image_box
-            size_hint_y: 0.8  # Usa l'80% dell'altezza
-            padding: 10  # Spazio interno per evitare che l'immagine tocchi i bordi
-
-            Scatter:
-                id: opera_scatter
-                do_rotation: False
-                do_translation: True
-                do_translation_x: False  # Limita movimento X
-                do_translation_y: False  # Limita movimento Y
-                do_translation_boundaries: True  # Vincola il movimento entro i confini
-                do_scale: True
-                scale_min: 1
-                scale_max: 3
-                size_hint: (1, 1)  # Permette al scatter di occupare l'intero spazio disponibile
-                
-                Image:
-                    id: opera_image
-                    source: ''
-                    allow_stretch: True
-                    keep_ratio: True  # Mantiene le proporzioni
-                    size_hint: None, None  # Per controllare manualmente la dimensione
-                    pos_hint: {'center_x': 0.5, 'center_y': 0.5}  # Centra l'immagine nel Scatter
         
-        # Footer dedicato alla text box, occupa il 20% dello schermo
+        # Sezione immagine (80% dello schermo)
+        BoxLayout:
+            id: main_box
+            size_hint_y: 0.8
+            padding: 10
+            orientation: 'horizontal'
+            
+            BoxLayout:
+                id: left_box
+                size_hint_x: 0.2
+                
+            # Usiamo RelativeLayout per centrare l'OperaImageViewer
+            RelativeLayout:
+                id: image_box
+                size_hint_x: 0.6
+            
+                OperaImageViewer:
+                    id: opera_scatter
+                    # Rimuoviamo size_hint_x poiché verrà gestito nel codice Python
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+                    
+            BoxLayout:
+                id: right_box
+                size_hint_x: 0.2
+        
+        # Footer (20% dello schermo)
         FooterField:
-            size_hint_y: 0.2
             id: footer_field
+            size_hint_y: 0.2
