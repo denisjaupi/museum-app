@@ -14,6 +14,13 @@ class ZoomingController:
         self.stable_distance = None    # Distanza stabile da cui far partire lo zoom
         self.zooming_active = False     # Stato dello zoom (attivo/non attivo)
         self.previous_distance = None    # Per memorizzare la distanza precedente
+        self.mouse_x = None
+        self.mouse_y = None
+
+    def set_mouse_position(self, event, x, y, flags, param):
+        """Aggiorna le coordinate del cursore del mouse."""
+        if event == cv2.EVENT_MOUSEMOVE:
+            self.mouse_x, self.mouse_y = x, y
 
     def calculate_distance(self, point1, point2, frame_width, frame_height):
         """Calcola la distanza euclidea tra due punti, adattata alla dimensione del frame."""
@@ -33,15 +40,28 @@ class ZoomingController:
         h, w = image.shape[:2]
         new_w, new_h = int(w * self.zoom_factor), int(h * self.zoom_factor)
 
-        # Calcola il ridimensionamento dell'immagine
-        zoomed_image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-
-        # Calcola il punto di partenza per il cropping basato sull'offset
-        start_x = max((new_w // 2) - (w // 2), 0)
-        start_y = max((new_h // 2) - (h // 2), 0)
+        # Verifica se le coordinate del cursore sono disponibili
+        if self.mouse_x is not None and self.mouse_y is not None:
+            center_x = int(self.mouse_x * self.zoom_factor)
+            center_y = int(self.mouse_y * self.zoom_factor)
+        else:
+            center_x, center_y = new_w // 2, new_h // 2  # Centro dell'immagine se il mouse non è presente
 
         # Croppa l'immagine zoomata
-        zoomed_image = zoomed_image[start_y:start_y + h, start_x:start_x + w]
+        zoomed_image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+        # Calcola il ritaglio basato sulla posizione del cursore
+        start_x = max(0, center_x - w // 2, 0)
+        start_y = max(0, center_y - h // 2, 0)
+        end_x = min(start_x + w, new_w)
+        end_y = min(start_y + h, new_h)
+
+        # Ritaglia l'immagine zoomata
+        zoomed_image = zoomed_image[start_y:end_y, start_x:end_x]
+
+        # # In caso di ritaglio fuori dai bordi, lo riadatto
+        # if zoomed_image.shape[0] != h or zoomed_image.shape[1] != w:
+        #     zoomed_image = cv2.resize(zoomed_image, (w, h))
 
         return zoomed_image
 
@@ -111,7 +131,7 @@ def main():
     zooming_controller = ZoomingController()
 
     # Carica l'immagine da zoomare
-    image_path = 'IMG_Test.JPG'
+    image_path = 'src/app/utils/IMG_Test.jpg'
     image = cv2.imread(image_path)
 
     if image is None:
@@ -120,6 +140,11 @@ def main():
 
     # Inizializza la webcam
     cap = cv2.VideoCapture(0)
+
+    # Aggiungi il listener del mouse
+    cv2.namedWindow("Zoomed Image")
+    cv2.setMouseCallback("Zoomed Image", zooming_controller.set_mouse_position)
+
 
     while True:
         ret, frame = cap.read()
