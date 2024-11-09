@@ -1,3 +1,5 @@
+from database.db_connection import DBConnection
+
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
@@ -8,11 +10,10 @@ from kivy.properties import StringProperty, NumericProperty, ListProperty
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.uix.button import Button
+from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 from kivy.lang import Builder
-from kivy.uix.widget import Widget
-
 
 class HeaderWidget(BoxLayout):
     logo_source = StringProperty('utils/IMG_Test3.png')
@@ -36,15 +37,15 @@ class HeaderWidget(BoxLayout):
         language_layout = BoxLayout(size_hint_x=0.3, orientation='horizontal', padding=[20, 20, 20, 20])
         language_layout.add_widget(BoxLayout(size_hint_x=1))  # Spacer
         self.language_spinner = Spinner(
-            text='IT',
-            values=['IT', 'EN', 'FR', 'DE'],
+            text='IT',  # Imposta la lingua predefinita
+            values=['IT', 'EN'],  # Le lingue selezionabili
             size_hint_x=None,
             width=100,
             font_size=20,
-            color=[1, 1, 1, 1],
-            background_color=[0.447, 0.106, 0.157, 1],
-            background_normal='',
-            background_down=''
+            color=[1, 1, 1, 1],  # Testo bianco
+            background_color=[0.447, 0.106, 0.157, 1],  # Sfondo Bordeaux 
+            background_normal='',  # Rimuove lo sfondo normale
+            background_down=''  # Rimuove lo sfondo quando è premuto
         )
         language_layout.add_widget(self.language_spinner)
         self.add_widget(language_layout)
@@ -74,15 +75,20 @@ class FooterField(BoxLayout):
     def update_text(self, new_text):
         self.text_input.text = new_text
 
-class Card(ButtonBehavior, BoxLayout):
-    description = StringProperty('')
-    font_size = NumericProperty(36)
 
-    def __init__(self, image_source, description, gallery_screen, **kwargs):
+class Card(ButtonBehavior, BoxLayout):
+    title = StringProperty('')  # Titolo dell'opera
+    description = StringProperty('')  # Descrizione dell'opera
+    image_source = StringProperty('')  # Percorso dell'immagine
+    opera_id = NumericProperty(0)  # ID dell'opera, deve essere un numero (int o float)
+
+    def __init__(self, title, description, image_source, opera_id, gallery_screen, **kwargs):
         super(Card, self).__init__(**kwargs)
+        self.gallery_screen = gallery_screen
+        self.title = title
         self.description = description
-        self.gallery_screen = gallery_screen  # Salva il riferimento a GalleryScreen
-        self.image_source = image_source  # Salva anche il percorso dell'immagine
+        self.image_source = image_source
+        self.opera_id = opera_id  # Non è più necessario convertire in stringa
 
         self.orientation = 'vertical'
         self.padding = 20
@@ -92,10 +98,13 @@ class Card(ButtonBehavior, BoxLayout):
             Color(0.9, 0.9, 0.9, 1)
             self.rect = Rectangle(pos=self.pos, size=self.size)
 
-        self.image = Image(source=image_source, allow_stretch=True, keep_ratio=True, size_hint_y=0.8)
+        # Carica l'immagine dal path
+        self.image = Image(source=self.image_source, allow_stretch=True, keep_ratio=True, size_hint_y=0.8)
+
+        # Aggiorna il Label per mostrare il titolo invece della descrizione
         self.label = Label(
-            text=self.description,
-            font_size=self.font_size,
+            text=self.title,  # Cambiato a self.title per mostrare il titolo
+            font_size=23,
             padding=[20, 20],
             halign='left',
             valign='top',
@@ -109,29 +118,37 @@ class Card(ButtonBehavior, BoxLayout):
         self.add_widget(self.image)
         self.add_widget(self.label)
 
+        # Lega il comportamento di clic e dimensione
         self.bind(on_touch_down=self.on_card_click)
         self.bind(size=self._update_rect)
         self.bind(pos=self._update_rect)
 
         Window.bind(mouse_pos=self.on_card_hover)
 
-    def on_card_click(self, instance, touch):
-        if self.collide_point(*touch.pos):
-            # Imposta l'immagine da visualizzare nell'OperaScreen
-            self.gallery_screen.manager.get_screen('opera').image_source = self.image_source
-            App.get_running_app().root.current = 'opera'  # Cambia a OperaScreen
-
     def on_card_hover(self, instance, touch):
+        """Mostra la descrizione nel footer quando la card è hoverata"""
         if self.collide_point(*Window.mouse_pos):
             footer = self.gallery_screen.ids.footer
             if footer:
-                footer.update_text(self.description)
+                footer.update_text(self.description)  # Mostra la descrizione completa nel footer
+
+    def on_card_click(self, instance, touch):
+        """Quando si clicca sulla card, si va alla pagina dell'opera"""
+        if self.collide_point(*touch.pos):  # Verifica se il punto di tocco è dentro la card
+            opera_screen = self.gallery_screen.manager.get_screen('opera')
+            opera_screen.image_source = self.image_source
+
+            # Passa l'opera_id alla schermata OperaScreen
+            opera_screen.opera_id = self.opera_id  # Non è più necessario convertire in stringa
+            App.get_running_app().root.current = 'opera'  # Cambia schermata a 'opera'
 
     def _update_rect(self, instance, value):
+        """Assicura che la rect e il testo si aggiornino correttamente durante i cambiamenti di dimensione"""
         if hasattr(self, 'rect'):
             self.rect.pos = self.pos
             self.rect.size = self.size
             self.label.text_size = (self.width, None)
+
 
 
 class ScrollButton(Button):
@@ -139,19 +156,38 @@ class ScrollButton(Button):
         super(ScrollButton, self).__init__(**kwargs)
 
 class GalleryScreen(Screen):
-    card_data = ListProperty([
-        {'image_source': 'utils/IMG_Test.jpg', 'description': "La Cappella dei Magi è un piccolo ambiente posto nel cuore del palazzo, al primo piano. Progettato da Michelozzo, è costituito da un’aula quadrata e da una scarsella sopraelevata per l’altare. L’accesso avveniva da due ingressi: uno privato, per la famiglia, e uno pubblico per accogliere gli ospiti. Il soffitto ligneo, opera di Pagno di Lapo, è finemente intagliato e dorato e sembra specchiarsi, per impianto e forme, sul pregiato pavimento in marmi policromi commessi. Gli affreschi sulle pareti furono realizzati da Benozzo Gozzoli dal 1459 e rappresentano il viaggio dei Magi verso Gesù bambino, raffigurato nella pala d’altare eseguita dalla bottega di Filippo Lippi. Partendo dalla parete est, il corteo avanza con Gaspare (in bianco), poi con Baldassarre (in verde) sulla parete sud, infine con Melchiorre (in rosso) sulla parete ovest. Alla straordinaria ricchezza dei dettagli e degli ornamenti si accompagna l’accurata raffigurazione del paesaggio e di personaggi del tempo posti entro il corteo sacro: fra questi spiccano Cosimo e Piero de’ Medici, i giovani Lorenzo e Giuliano, Gian Galeazzo Sforza e Sigismondo Pandolfo Malatesta, papa Pio II Piccolomini."},
-        {'image_source': 'utils/IMG_Test4.jpg', 'description': "Tra le opere esposte a Palazzo Medici Riccardi una delle più celebri è la Madonna con il Bambino, realizzata intorno agli anni Sessanta del Quattrocento da Filippo Lippi. Dopo averne perso a lungo le tracce, il dipinto venne ritrovato nel 1907 presso l’Ospedale di San Salvi a Firenze e  qui trasferito l’anno successivo, ipotizzandone la committenza medicea: questa supposizione fu in parte confermata dal fatto che l’opera proveniva da Castel Pulci, residenza di proprietà dei Riccardi e a loro volta acquirenti del palazzo mediceo. Il dipinto, raffigurante la Madonna che si accosta dolcemente alla guancia del Bambino, riprende una composizione tipica del Rinascimento fiorentino, che il Lippi rappresenta con grazia e naturalezza. L’opera fu molto ammirata e copiata proprio per i suoi preziosi effetti di luce e per l’eleganza delle linee di contorno. È osservabile anche il retro della tavola, che mostra un disegno preparatorio di testa maschile."},
-        {'image_source': 'utils/IMG_Test5.jpg', 'description': "La Galleria del palazzo e l’attigua Biblioteca furono edificate tra il 1670 e il 1677 per volontà della famiglia Riccardi; a sovrintendere i lavori fu inizialmente l’architetto Pier Maria Baldi, sostituito poi da Giovan Battista Foggini. La decorazione della volta della Galleria iniziò solo nell’estate del 1682, quando Luca Giordano accolse la proposta del marchese Francesco Riccardi, per concludersi nel 1685. Il ricco e colto programma iconografico, concepito senza soluzione di continuità sull’intera superficie voltata, è declinato con un vastissimo numero di figure e una cromia chiara e luminosa."},
-        {'image_source': 'utils/IMG_Test6.jpg', 'description': "Il Museo dei Marmi espone una selezione di opere scultoree provenienti dalle collezioni antiquarie della famiglia Riccardi, appassionati collezionisti di marmi antichi, qui trasferite dalla precedente villa di Gualfonda. Quando il palazzo, nel 1810, venne alienato al demanio, solo una parte della collezione Riccardi fu trasferita nelle collezioni pubbliche, mentre il resto rimase all’interno dell’edificio ed è oggi visibile tra il Museo dei Marmi e il percorso di visita al primo piano. Si tratta soprattutto di busti marmorei di età romana raffiguranti saggi, eroi, imperatori o dei: fra questi l’imperatore Caracalla, Vibia Sabina, Euripide, Anacreonte, Sofocle e il superbo busto di atleta. Vi sono anche i calchi in gesso dei busti di Augusto e di Agrippa, i cui originali furono donati da papa Sisto IV a Lorenzo il Magnifico nel 1471, e quelli di Caligola e Nerone, acquistati dai Riccardi nel 1669; tutti gli originali sono conservati alle Gallerie degli Uffizi."},
-    ])
-
+    card_data = ListProperty([])  # La lista delle opere d'arte verrà aggiornata dinamicamente
     visible_cards = 3
     current_index = 0
+    current_language = 'it'  # Lingua predefinita (italiano)
 
     def __init__(self, **kwargs):
         super(GalleryScreen, self).__init__(**kwargs)
+        self.fetch_opere_d_arte()  # Recupera i dati dal database
         self.update_cards()
+
+        # Ascolta il cambiamento di lingua dallo Spinner
+        self.ids.header_widget.language_spinner.bind(text=self.on_language_change)
+
+    def fetch_opere_d_arte(self):
+        """Recupera i dati delle opere d'arte dal database e aggiorna card_data."""
+        db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
+        db.connect()  # Connessione al database
+
+        # Modifica la query per includere anche l'ID dell'opera
+        query = f"""
+            SELECT id, titolo->'{self.current_language}', descrizione->'{self.current_language}', immagine_principale 
+            FROM opere_d_arte;
+        """
+        results = db.execute_query(query)
+        
+        if results:
+            # Aggiungi l'ID dell'opera alla card_data
+            self.card_data = [
+                {'id': row[0], 'title': row[1], 'description': row[2], 'image_source': row[3]} for row in results
+            ]
+        db.close()  # Chiudi la connessione
+
 
     def update_cards(self):
         self.ids.card_grid.clear_widgets()
@@ -159,12 +195,21 @@ class GalleryScreen(Screen):
         cards_to_display = self.card_data[self.current_index:end_index]
 
         for data in cards_to_display:
-            card = Card(image_source=data['image_source'], description=data['description'], gallery_screen=self)
+            # Assicurati che title e description siano stringhe
+            title = str(data['title']) if not isinstance(data['title'], str) else data['title']
+            description = str(data['description']) if not isinstance(data['description'], str) else data['description']
+            image_source = data['image_source']  # Il percorso dell'immagine
+            opera_id = data.get('id', '') # ID dell'opera
+
+            # Passa il titolo, la descrizione e l'immagine alla Card
+            card = Card(title=title, description=description, image_source=image_source, opera_id=opera_id, gallery_screen=self)
             self.ids.card_grid.add_widget(card)
 
         empty_slots = self.visible_cards - len(cards_to_display)
         for _ in range(empty_slots):
             self.ids.card_grid.add_widget(Widget())
+
+
 
     def scroll_left(self):
         if self.current_index > 0:
@@ -175,3 +220,24 @@ class GalleryScreen(Screen):
         if self.current_index + self.visible_cards < len(self.card_data):
             self.current_index += self.visible_cards
             self.update_cards()
+
+    def on_language_change(self, spinner, language):
+        """Metodo che viene chiamato quando cambia la lingua nello spinner"""
+        if language == 'IT':
+            self.current_language = 'it'
+        elif language == 'EN':
+            self.current_language = 'en'
+
+
+        # Aggiorna le card e la descrizione quando cambia la lingua
+        self.fetch_opere_d_arte()  # Ricarica i dati delle opere d'arte nella nuova lingua
+        self.update_cards()  # Ricarica le card con la lingua aggiornata
+        self.update_footer_description()  # Aggiorna la descrizione nel footer
+
+    def update_footer_description(self):
+        """Recupera e aggiorna la descrizione nel footer per la lingua selezionata"""
+        if len(self.card_data) > 0:
+            first_card = self.card_data[0]  # Usa la prima card per esempio
+            footer = self.ids.footer
+            if footer:
+                footer.update_text(first_card['description'])
