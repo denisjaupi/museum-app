@@ -1,4 +1,5 @@
 import cv2
+import os
 import mediapipe as mp
 import numpy as np
 import joblib
@@ -15,7 +16,7 @@ class GestureModelDetector:
             1: "Index middle up",
             2: "Zoom in / Zoom out",
         }
-        self.model_path =  'src/ai/model/gesture_recognition_model.pkl'
+        self.model_path =  os.path.join(os.path.dirname(__file__), 'model', 'gesture_recognition_model.pkl')
 
     def load_model(self, model_path):
         """Carica il modello addestrato."""

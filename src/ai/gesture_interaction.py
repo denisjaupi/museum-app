@@ -1,7 +1,6 @@
 import cv2
 import mediapipe as mp
 import numpy as np
-import pyautogui
 import gesture_recognition as gr
 from utils import zooming_gesture as zg
 from utils import indexUp_gesture as ig
