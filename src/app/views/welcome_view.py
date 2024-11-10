@@ -42,7 +42,7 @@ class HeaderWidget(BoxLayout):
         # Spinner per la selezione della lingua
         self.language_spinner = Spinner(
             text='IT',  # Imposta la lingua predefinita
-            values=['IT', 'EN', 'FR', 'DE'],  # Le lingue selezionabili
+            values=['IT', 'EN'],  # Le lingue selezionabili
             size_hint_x=None,
             width=100,
             font_size=20,

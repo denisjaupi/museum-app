@@ -1,5 +1,5 @@
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty, ObjectProperty
+from kivy.properties import StringProperty, ListProperty, ObjectProperty, NumericProperty
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -8,6 +8,8 @@ from kivy.uix.image import Image
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.clock import Clock
+
+from database.db_connection import DBConnection
 
 
 class FooterField(BoxLayout):
@@ -64,7 +66,9 @@ class OperaImageViewer(RelativeLayout):
 
     def load_image(self, source):
         """Carica una nuova immagine"""
-        self.image.source = source
+        print(f"Caricando l'immagine da: {source}")
+        self.image_source = source
+        self.image.source = self.image_source
         self.image.reload()
         Clock.schedule_once(lambda dt: self.update_layout(), 0.1)
         
@@ -138,36 +142,135 @@ class OperaScreen(Screen):
     image_source = StringProperty('')
     annotations = ListProperty([])
     viewer = ObjectProperty(None)
-    
+    opera_id = NumericProperty(0)
+    current_language = StringProperty('it')  
+
+    # Aggiungiamo variabili per gestire l'elenco delle immagini e l'indice corrente
+    image_paths = ListProperty([])  # Lista dei percorsi delle immagini per l'opera
+    current_image_index = NumericProperty(0)  # Indice dell'immagine corrente
+
     def on_pre_enter(self):
-        self.load_opera_details()
+        self.load_opera_images()
         self.update_display()
         
-    def load_opera_details(self):
-        self.image_source = 'utils/IMG_Test.jpg'
-        self.annotations = [
-            {'rel_x': 0.24, 'rel_y': 0.4, 'text': 'Cosimo di Giovanni de Medici: detto il Vecchio o Pater Patriae (Firenze, 27 settembre 1389 – Careggi, 1º agosto 1464) è stato un politico e banchiere italiano, primo signore de facto di Firenze e primo uomo di Stato di rilievo della famiglia Medici.'},
-            {'rel_x': 0.32, 'rel_y': 0.4, 'text': 'Piero di Cosimo de Medici: detto il Gottoso (Firenze, 14 giugno 1416 – Firenze, 2 dicembre 1469), è stato un politico italiano, signore de facto di Firenze per cinque anni, dal 1464 al 1469. Figlio primogenito di Cosimo il Vecchio.'},
-            {'rel_x': 0.13, 'rel_y': 0.4, 'text': 'Galeazzo Maria Sforza: (Fermo, 14 o 24 gennaio 1444 – Milano, 26 dicembre 1476) fu duca di Milano dal 1466 al 1476, anno in cui fu assassinato nei pressi della chiesa di Santo Stefano per mano di alcuni nobili.'},
-            {'rel_x': 0.04, 'rel_y': 0.4, 'text': 'Sigismondo Pandolfo Malatesta: (Brescia, 19 giugno 1417 – Rimini, 9 ottobre 1468) fu signore di Rimini e Fano dal 1432. Considerato dai suoi contemporanei come uno dei più audaci condottieri militari in Italia, partecipò a molte battaglie che caratterizzarono quel periodo.'},
-            {'rel_x': 0.44, 'rel_y': 0.3, 'text': 'Carlo de Medici: (1540-1592), figlio illegittimo di Cosimo I de Medici, fu un nobile fiorentino che ricoprì ruoli significativi nella politica toscana, servendo come governatore di Siena e sostenendo le arti, nonostante la sua condizione di illegittimità.'},
-            {'rel_x': 0.67, 'rel_y': 0.4, 'text': 'Gaspare: uno dei Magi. Porta in dono la mirra, che essendo legata al culto dei morti è un omaggio all\' umanità di Cristo. Gaspare, come protettore dei Medici (perché la mirra era considerata anche un farmaco), è anche un riferimento al cognome della famiglia Medici. Avrebbe le sembianze idealizzate di Lorenzo de Medici.'}
-        ]
-            
+    def on_leave(self):
+        """Quando la schermata sta per essere lasciata"""
+        # Resetta lo stato dell'immagine e delle annotazioni
+        self.image_source = ''
+        self.annotations.clear()
+        self.viewer.clear_annotations()
+        self.ids.footer_field.update_text('')  # Azzera il testo nel footer
+
+
+    def load_opera_images(self):
+        """Carica l'immagine principale e tutte le immagini correlate a questa opera dal database."""
+        if not self.opera_id:
+            return
+
+        db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
+        db.connect()
+
+        # Query per ottenere l'immagine principale dell'opera
+        query_main_image = """
+            SELECT immagine_principale 
+            FROM opere_d_arte 
+            WHERE id = %s
+        """
+        result_main_image = db.execute_query(query_main_image, (self.opera_id,))
+        
+        # Aggiungi l'immagine principale come primo elemento nella lista `image_paths`
+        if result_main_image:
+            main_image_path = result_main_image[0][0]
+            self.image_paths = [main_image_path]  # Inizializza `image_paths` con l'immagine principale
+
+        # Query per ottenere tutte le immagini correlate all'opera
+        query_related_images = """
+            SELECT percorso 
+            FROM immagini_opera 
+            WHERE opera_id = %s
+            ORDER BY id  -- Assicura un ordine costante, ad esempio per id
+        """
+        result_related_images = db.execute_query(query_related_images, (self.opera_id,))
+        db.close()
+
+        # Aggiungi i percorsi delle immagini correlate a `image_paths`
+        related_image_paths = [row[0] for row in result_related_images]
+        self.image_paths.extend(related_image_paths)  # Aggiunge le immagini correlate alla lista
+
+        # Imposta l'indice corrente su 0 (prima immagine, che è quella principale)
+        self.current_image_index = 0
+
+        # Carica anche le annotazioni per la prima immagine (se necessario)
+        self.load_annotations_for_current_image()
+
+    def load_annotations_for_current_image(self):
+        """Carica le annotazioni relative all'immagine corrente"""
+        if not self.image_paths:
+            return
+        
+        db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
+        db.connect()
+        
+        # Esempio di query per le annotazioni specifiche dell'opera; adattare se necessario
+        query_annotations = f"""
+            SELECT titolo->>'{self.current_language}', testo->>'{self.current_language}', coordinata_x, coordinata_y 
+            FROM dettagli_opera 
+            WHERE opera_id = %s
+        """
+        result_annotations = db.execute_query(query_annotations, (self.opera_id,))
+        db.close()
+        
+        if result_annotations:
+            self.annotations = [
+                {'rel_x': row[2], 'rel_y': row[3], 'text': f"{row[0]}\n {row[1]}"}
+                for row in result_annotations
+            ]
+        else:
+            self.annotations = []
+
+    def show_previous_image(self):
+        """Mostra l'immagine precedente nella lista, se disponibile."""
+        if not self.image_paths:
+            return
+
+        # Decrementa l'indice e torna all'ultimo elemento se siamo a inizio lista
+        self.current_image_index = (self.current_image_index - 1) % len(self.image_paths)
+        self.image_source = self.image_paths[self.current_image_index]
+
+        # Aggiorna la visualizzazione
+        self.update_display()
+
+    def show_next_image(self):
+        """Mostra l'immagine successiva nella lista, se disponibile."""
+        if not self.image_paths:
+            return
+
+        # Incrementa l'indice e torna al primo elemento se siamo alla fine della lista
+        self.current_image_index = (self.current_image_index + 1) % len(self.image_paths)
+        self.image_source = self.image_paths[self.current_image_index]
+        
+        # Aggiorna la visualizzazione
+        self.update_display()
+
     def show_annotation_text(self, text):
-        print(f"Updating footer text with: {text}")
-        self.ids.footer_field.update_text(text)
+        """Mostra il testo dell'annotazione nel footer"""
+        self.ids.footer_field.update_text(text) 
 
     def update_display(self):
-        self.viewer = self.ids.opera_scatter
-        self.viewer.load_image(self.image_source)
-        
-        self.viewer.clear_annotations()
-        
-        for annot in self.annotations:
-            self.viewer.add_annotation(
-                annot['rel_x'],
-                annot['rel_y'],
-                annot['text'],
-                self.show_annotation_text
-            )
+        """Aggiorna il visualizzatore dell'opera con l'immagine corrente e le annotazioni."""
+        if self.viewer:
+            
+            # Carica l'immagine corrente
+            self.viewer.load_image(self.image_source)
+            
+            # Pulisce le annotazioni esistenti
+            self.viewer.clear_annotations()
+
+            # Aggiunge le annotazioni
+            for annot in self.annotations:
+                self.viewer.add_annotation(
+                    annot['rel_x'],
+                    annot['rel_y'],
+                    annot['text'],
+                    self.show_annotation_text
+                )

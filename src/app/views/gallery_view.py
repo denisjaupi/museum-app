@@ -137,10 +137,9 @@ class Card(ButtonBehavior, BoxLayout):
         if self.collide_point(*touch.pos):  # Verifica se il punto di tocco è dentro la card
             opera_screen = self.gallery_screen.manager.get_screen('opera')
             opera_screen.image_source = self.image_source
-
-            # Passa l'opera_id alla schermata OperaScreen
-            opera_screen.opera_id = self.opera_id  # Non è più necessario convertire in stringa
-            App.get_running_app().root.current = 'opera'  # Cambia schermata a 'opera'
+            opera_screen.opera_id = self.opera_id  
+            opera_screen.current_language = self.gallery_screen.current_language
+            App.get_running_app().root.current = 'opera'  
 
     def _update_rect(self, instance, value):
         """Assicura che la rect e il testo si aggiornino correttamente durante i cambiamenti di dimensione"""
@@ -148,7 +147,6 @@ class Card(ButtonBehavior, BoxLayout):
             self.rect.pos = self.pos
             self.rect.size = self.size
             self.label.text_size = (self.width, None)
-
 
 
 class ScrollButton(Button):
@@ -169,6 +167,12 @@ class GalleryScreen(Screen):
         # Ascolta il cambiamento di lingua dallo Spinner
         self.ids.header_widget.language_spinner.bind(text=self.on_language_change)
 
+    def on_leave(self):
+        """Metodo per azzerare lo stato quando si lascia la schermata"""
+        footer = self.ids.footer  # Ottieni il footer dalla vista
+        if footer:
+            footer.update_text('')
+            
     def fetch_opere_d_arte(self):
         """Recupera i dati delle opere d'arte dal database e aggiorna card_data."""
         db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
