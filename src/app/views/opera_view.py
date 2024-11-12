@@ -8,6 +8,7 @@ from kivy.uix.image import Image
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.clock import Clock
+from kivy.app import App
 
 from database.db_connection import DBConnection
 
@@ -274,3 +275,16 @@ class OperaScreen(Screen):
                     annot['text'],
                     self.show_annotation_text
                 )
+        
+    def on_info_button_press(self):
+        """Gestisce la pressione del pulsante info_butt e naviga alla schermata InfoOperaScreen."""
+        app = App.get_running_app()
+        info_screen = app.root.get_screen('info_opera')  # Ottieni InfoOperaScreen direttamente da ScreenManager
+        
+        # Passa i parametri a info_screen
+        info_screen.image_source = self.image_source
+        info_screen.opera_id = self.opera_id
+        info_screen.current_language = self.current_language
+        
+        # Cambia la schermata corrente a 'info_opera'
+        app.root.current = 'info_opera'

@@ -15,7 +15,7 @@
         # Sezione immagine (75% dello schermo)
         BoxLayout:
             id: main_box
-            size_hint_y: 0.75
+            size_hint_y: 0.7
             padding: 10
             orientation: 'horizontal'
 
@@ -79,13 +79,14 @@
                 padding: 10
 
                 Button:
+                    id: info_butt
                     text: 'Info'
                     font_size: self.height * 0.4
                     halign: 'center'
                     valign: 'middle'
                     background_normal: ''
                     background_color: [0.9, 0.9, 0.9, 1]
-                    on_release: app.root.current = 'info_opera'
+                    on_release: root.on_info_button_press()
             
             BoxLayout:
                 id: rightButt_box
@@ -104,4 +105,4 @@
         # Footer (20% dello schermo)
         FooterField:
             id: footer_field
-            size_hint_y: 0.15
+            size_hint_y: 0.2

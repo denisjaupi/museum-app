@@ -88,7 +88,7 @@ class Card(ButtonBehavior, BoxLayout):
         self.title = title
         self.description = description
         self.image_source = image_source
-        self.opera_id = opera_id  # Non è più necessario convertire in stringa
+        self.opera_id = opera_id  
 
         self.orientation = 'vertical'
         self.padding = 20
