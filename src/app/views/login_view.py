@@ -24,7 +24,7 @@ class LoginScreen(Screen):
             if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
                 print("Login riuscito!")
                 self.reset_form()
-                self.manager.current = 'benvenuto'
+                self.manager.current = 'aggiungi_opere'  # Vai alla schermata di aggiunta delle opere
             else:
                 print("Password errata!")
                 self.ids.password_error.text = "Password errata!"

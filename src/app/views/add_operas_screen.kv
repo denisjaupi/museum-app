@@ -1,0 +1,108 @@
+<AddOperasScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+
+        # Header Section 
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.2
+            padding: [20]
+            canvas.before:
+                Color:
+                    rgba: [0.9, 0.9, 0.9, 1]
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Button:
+                text: 'Aggiungi Logo'
+                size_hint: (1, 1)
+                background_normal: ''
+                background_color: [0.447, 0.106, 0.157, 1]
+                on_release: root.on_logo_click()
+
+
+        # Centrale
+        BoxLayout:
+            size_hint_y: 0.6
+            orientation: 'vertical'
+            canvas.before:
+                Color:
+                    rgba: 1, 1, 1, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            # Sezione superiore centrale (invariata)
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: 0.2
+                padding: [20]
+
+                BoxLayout:
+                    size_hint_x: 0.075
+                    Button:
+                        text: 'Back'
+                        on_release: app.root.current = 'benvenuto'
+                        size_hint: (1, 1)
+                        background_normal: ''
+                        background_color: [0.9, 0.9, 0.9, 1]
+
+                Widget:
+                    size_hint_x: None
+                    width: 20
+
+                BoxLayout:
+                    size_hint_x: 0.825
+                    Label:
+                        text: 'Aggiungi Opere'
+                        font_size: 40
+                        color: [0.447, 0.106, 0.157, 1]
+
+            # Layout principale con pulsanti laterali e griglia centrale
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: 0.8
+                padding: [20]
+
+                # Bottone per scorrere a sinistra
+                ScrollButton:
+                    text: '<'
+                    on_release: root.scroll_left()
+                    size_hint_x: 0.1
+                    background_normal: ''
+                    background_color: [0.9, 0.9, 0.9, 1]
+
+                # Layout griglia con card
+                GridLayout:
+                    id: card_grid
+                    cols: 3
+                    spacing: 20
+                    padding: [20, 0, 20, 0]
+                    size_hint_x: 0.8
+
+                # Bottone per scorrere a destra
+                ScrollButton:
+                    text: '>'
+                    on_release: root.scroll_right()
+                    size_hint_x: 0.1
+                    background_normal: ''
+                    background_color: [0.9, 0.9, 0.9, 1]
+
+        # Footer con pulsante "Aggiungi Opera"
+        BoxLayout:
+            id: footer
+            orientation: 'horizontal'
+            size_hint_y: 0.2
+            padding: [20]
+            canvas.before:
+                Color:
+                    rgba: [0.9, 0.9, 0.9, 1]
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Button:
+                text: 'Aggiungi Opera'
+                size_hint: (1, 1)
+                background_normal: ''
+                background_color: [0.447, 0.106, 0.157, 1]
+                on_release: root.add_opera_card()

@@ -1,4 +1,5 @@
 import psycopg2
+import json
 
 class DBConnection:
     def __init__(self, host, port, database, user, password):
@@ -50,6 +51,15 @@ class DBConnection:
         else:
             print("Connessione non stabilita.")
             return None
+
+    def insert_opera(self, titolo, autore, descrizione, immagine_principale):
+        """Inserisce una nuova opera d'arte nella tabella opere_d_arte."""
+        query = """
+        INSERT INTO opere_d_arte (titolo, autore, descrizione, immagine_principale)
+        VALUES (%s, %s, %s, %s)
+        """
+        params = (json.dumps(titolo), autore, json.dumps(descrizione), immagine_principale)
+        self.execute_query(query, params, commit=True)
 
     # Funzione insert_user con commit esplicito
     def insert_user(self, username, password_hash):
