@@ -1,4 +1,3 @@
-# db_connection.py
 import psycopg2
 
 class DBConnection:
@@ -28,18 +27,57 @@ class DBConnection:
             self.cursor = None
             self.connection = None
 
-    def execute_query(self, query, params=None):
-        """Esegue una query e restituisce i risultati."""
+    def execute_query(self, query, params=None, commit=False):
+        """Esegue una query (SELECT o DML) e restituisce i risultati."""
         if self.connection and self.cursor:
             try:
+                # Esegui la query
                 self.cursor.execute(query, params)
-                return self.cursor.fetchall()
+                
+                # Se la query è di lettura (SELECT), restituisci i risultati
+                if query.strip().lower().startswith("select"):
+                    return self.cursor.fetchall()
+
+                # Se è una query di modifica, effettua il commit (se richiesto)
+                if commit:
+                    self.connection.commit()
+
+                return None  # Nessun risultato da restituire per DML (INSERT, UPDATE, DELETE)
             except Exception as error:
                 print(f"Errore nell'esecuzione della query: {error}")
+                self.connection.rollback()  # Ripristina in caso di errore
                 return None
         else:
             print("Connessione non stabilita.")
             return None
+
+    # Funzione insert_user con commit esplicito
+    def insert_user(self, username, password_hash):
+        """Inserisce un nuovo utente nel database."""
+        query = """
+        INSERT INTO login (username, password_hash)
+        VALUES (%s, %s)
+        """
+        self.execute_query(query, (username, password_hash), commit=True)
+        self.connection.commit()  
+
+    def get_user_by_username(self, username):
+        """Verifica se un utente esiste già nel database."""
+        query = """
+        SELECT * FROM login WHERE username = %s
+        """
+        return self.execute_query(query, (username,))
+    
+    def get_password_hash(self, username):
+        """Recupera l'hash della password per un determinato nome utente."""
+        query = """
+        SELECT password_hash FROM login WHERE username = %s
+        """
+        result = self.execute_query(query, (username,))
+        if result:
+            return result[0][0]  # Restituisce l'hash della password
+        return None
+
 
     def close(self):
         """Chiude la connessione al database."""

@@ -1,21 +1,28 @@
 <RegistrationScreen>:
     BoxLayout:
         orientation: 'vertical'
-        padding: 20
+        padding: 50
         spacing: 20
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1  # White background
+            Rectangle:
+                pos: self.pos
+                size: self.size
 
         Label:
             text: "Registrazione"
             font_size: '24sp'
             size_hint_y: None
             height: self.texture_size[1] + 20
+            color: 0, 0, 0, 1
 
         TextInput:
             id: username
             hint_text: "Username"
             multiline: False
             size_hint_y: None
-            height: 40
+            height: 60
 
         TextInput:
             id: password
@@ -23,7 +30,7 @@
             password: True
             multiline: False
             size_hint_y: None
-            height: 40
+            height: 60
 
         TextInput:
             id: confirm_password
@@ -31,10 +38,31 @@
             password: True
             multiline: False
             size_hint_y: None
-            height: 40
+            height: 60
+
+        # Etichetta per visualizzare l'errore delle password non coincidenti
+        Label:
+            id: password_error
+            text: ""
+            font_size: '14sp'
+            color: 1, 0, 0, 1  # Red color for error
+            size_hint_y: None
+            height: 30
+            opacity: 0  # Initially hidden
 
         Button:
             text: "Registra nuovo utente"
             size_hint_y: None
-            height: 40
+            height: 60
+            background_normal: ''
+            background_color: 0.447, 0.106, 0.157, 1
             on_release: root.register_user()
+
+        Button:
+            text: "Indietro"
+            size_hint_y: None
+            height: 60
+            background_normal: ''
+            background_color: [0.9, 0.9, 0.9, 1 ]
+            on_release: app.root.current = 'login'
+

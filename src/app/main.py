@@ -9,7 +9,7 @@ from views.login_view import LoginScreen
 from views.registration_view import RegistrationScreen  
 from kivy.core.window import Window
 
-class MyApp(App):
+class MuseumApp(App):
 
     def build(self):
         # Window.fullscreen = True
@@ -36,4 +36,4 @@ class MyApp(App):
         return sm
 
 if __name__ == '__main__':
-    MyApp().run()
+    MuseumApp().run()
