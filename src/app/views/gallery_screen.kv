@@ -1,3 +1,19 @@
+<FooterField>:
+    orientation: 'horizontal'
+    size_hint_y: 0.2
+
+    TextInput:
+        id: description_input
+        hint_text: ''
+        background_color: 0.447, 0.106, 0.157, 1  # Bordeaux
+        foreground_color: 1, 1, 1, 1  # White text
+        font_size: 36
+        multiline: True
+        readonly: True
+        size_hint: 1, 1
+        text: root.text  # Collega direttamente alla proprietà 'text' di root (FooterField)
+
+
 <GalleryScreen>:
 
     BoxLayout:
@@ -5,24 +21,58 @@
 
 ###################################################################
         
-        # Header - 20% dello spazio totale (con 3 sezioni interne)
-        BoxLayout:
-            size_hint_y: 0.2
-            orientation: 'horizontal'
+        # Header Section - Logo, Login Button, and Language Spinner
 
-            # Canvas per impostare lo sfondo bianco dell'header
+        BoxLayout:
+            id: header_widget
+            orientation: 'horizontal'
+            size_hint_y: 0.2
             canvas.before:
                 Color:
-                    rgba: 1, 1, 1, 1  # Bianco
+                    rgba: 1, 1, 1, 1  # White background
                 Rectangle:
                     pos: self.pos
                     size: self.size
-            
-            # Sezione logo (30%)
-            HeaderWidget:
-                id: header_widget  # Aggiungi l'ID per riferimento
-                
 
+            # Logo Section (30%)
+            BoxLayout:
+                size_hint_x: 0.3
+                orientation: 'horizontal'
+                padding: [20, 20, 20, 20]
+
+                Image:
+                    source: 'images/operas/logo/IMG_Logo.png'
+                    allow_stretch: True
+                    keep_ratio: True
+
+                BoxLayout:
+                    size_hint_x: 1  # Spacer
+
+            # Central Section (30%) - Empty space for centering purposes
+            BoxLayout:
+                size_hint_x: 0.4
+
+            # Language Selection Section (30%)
+            BoxLayout:
+                id: language_widget
+                size_hint_x: 0.2
+                orientation: 'horizontal'
+                padding: [20, 20, 20, 20]
+
+
+                Spinner:
+                    id: language_spinner
+                    text: 'IT'  # Default language
+                    values: ['IT', 'EN']  # Available languages
+                    size_hint_x: None
+                    
+                    width: 100
+                    height: 50
+                    font_size: 20
+                    color: 1, 1, 1, 1  # White text
+                    background_color: 0.447, 0.106, 0.157, 1  # Bordeaux background
+                    background_normal: ''  # Remove default background
+                    background_down: ''
 
 
 ###################################################################
@@ -112,4 +162,5 @@
         # Footer
         FooterField:
             id: footer
-            size_hint_y: 0.2
+
+

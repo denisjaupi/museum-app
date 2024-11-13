@@ -15,65 +15,19 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 from kivy.lang import Builder
 
-class HeaderWidget(BoxLayout):
-    logo_source = StringProperty('utils/IMG_Test3.png')
-
-    def __init__(self, **kwargs):
-        super(HeaderWidget, self).__init__(**kwargs)
-        self.orientation = 'horizontal'
-
-        # Sezione logo (30%)
-        logo_layout = BoxLayout(size_hint_x=0.3, orientation='horizontal', padding=[20, 20, 20, 20])
-        self.logo_image = Image(source=self.logo_source, allow_stretch=True, keep_ratio=True)
-        logo_layout.add_widget(self.logo_image)
-        logo_layout.add_widget(BoxLayout(size_hint_x=1))  # Spacer
-        self.add_widget(logo_layout)
-
-        # Sezione centrale (40%)
-        self.central_layout = BoxLayout(size_hint_x=0.4)
-        self.add_widget(self.central_layout)
-
-        # Sezione scelta lingua (30%)
-        language_layout = BoxLayout(size_hint_x=0.3, orientation='horizontal', padding=[20, 20, 20, 20])
-        language_layout.add_widget(BoxLayout(size_hint_x=1))  # Spacer
-        self.language_spinner = Spinner(
-            text='IT',  # Imposta la lingua predefinita
-            values=['IT', 'EN'],  # Le lingue selezionabili
-            size_hint_x=None,
-            width=100,
-            font_size=20,
-            color=[1, 1, 1, 1],  # Testo bianco
-            background_color=[0.447, 0.106, 0.157, 1],  # Sfondo Bordeaux 
-            background_normal='',  # Rimuove lo sfondo normale
-            background_down=''  # Rimuove lo sfondo quando è premuto
-        )
-        language_layout.add_widget(self.language_spinner)
-        self.add_widget(language_layout)
-
-    def update_logo(self, new_logo_path):
-        self.logo_source = new_logo_path
-        self.logo_image.source = self.logo_source
-        self.logo_image.reload()
 
 class FooterField(BoxLayout):
-    text = StringProperty("")
+    text = StringProperty('')  # Proprietà 'text' per il TextInput
 
     def __init__(self, **kwargs):
         super(FooterField, self).__init__(**kwargs)
-        self.text_input = TextInput(
-            hint_text='',
-            background_color=[0.447, 0.106, 0.157, 1],
-            foreground_color=[1, 1, 1, 1],
-            font_size=36,
-            multiline=True,
-            readonly=True,
-            size_hint=(1, 1),
-            text=self.text
-        )
-        self.add_widget(self.text_input)
+        self.orientation = 'horizontal'
+        self.size_hint_y = None
+        self.height = "100dp"
 
     def update_text(self, new_text):
-        self.text_input.text = new_text
+        """Metodo per aggiornare il testo nel TextInput"""
+        self.text = new_text  # Imposta il nuovo testo sulla proprietà 'text'
 
 
 class Card(ButtonBehavior, BoxLayout):
@@ -130,7 +84,7 @@ class Card(ButtonBehavior, BoxLayout):
         if self.collide_point(*Window.mouse_pos):
             footer = self.gallery_screen.ids.footer
             if footer:
-                footer.update_text(self.description)  # Mostra la descrizione completa nel footer
+                footer.text = self.description  # Imposta la proprietà 'text' per aggiornare il footer
 
     def on_card_click(self, instance, touch):
         """Quando si clicca sulla card, si va alla pagina dell'opera"""
@@ -165,7 +119,15 @@ class GalleryScreen(Screen):
         self.update_cards()
 
         # Ascolta il cambiamento di lingua dallo Spinner
-        self.ids.header_widget.language_spinner.bind(text=self.on_language_change)
+        self.bind(on_enter=self.bind_spinner)
+
+    def bind_spinner(self, *args):
+        self.ids.language_spinner.bind(text=self.on_language_change)
+
+    def on_language_change(self, instance, value):
+        self.current_language = value
+        print(f"Language changed to: {value}")
+        # Logica per aggiornare la lingua nell'app
 
     def on_leave(self):
         """Metodo per azzerare lo stato quando si lascia la schermata"""
@@ -231,8 +193,6 @@ class GalleryScreen(Screen):
             self.current_language = 'it'
         elif language == 'EN':
             self.current_language = 'en'
-
-
         # Aggiorna le card e la descrizione quando cambia la lingua
         self.fetch_opere_d_arte()  # Ricarica i dati delle opere d'arte nella nuova lingua
         self.update_cards()  # Ricarica le card con la lingua aggiornata
@@ -242,6 +202,6 @@ class GalleryScreen(Screen):
         """Recupera e aggiorna la descrizione nel footer per la lingua selezionata"""
         if len(self.card_data) > 0:
             first_card = self.card_data[0]  # Usa la prima card per esempio
-            footer = self.ids.footer
+            footer = self.ids.footer  # Ottieni il riferimento al footer
             if footer:
-                footer.update_text(first_card['description'])
+                footer.update_text(first_card['description'])  # Aggiorna il testo del footer

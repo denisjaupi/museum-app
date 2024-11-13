@@ -1,0 +1,38 @@
+<LoginScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 20
+
+        Label:
+            text: "Login"
+            font_size: '24sp'
+            size_hint_y: None
+            height: self.texture_size[1] + 20
+
+        TextInput:
+            id: username
+            hint_text: "Username"
+            multiline: False
+            size_hint_y: None
+            height: 40
+
+        TextInput:
+            id: password
+            hint_text: "Password"
+            password: True
+            multiline: False
+            size_hint_y: None
+            height: 40
+
+        Button:
+            text: "Entra"
+            size_hint_y: None
+            height: 40
+            on_release: root.login_user()
+
+        Button:
+            text: "Registrati"
+            size_hint_y: None
+            height: 40
+            on_release: app.root.current = 'registrazione'  # Passa alla schermata di registrazione

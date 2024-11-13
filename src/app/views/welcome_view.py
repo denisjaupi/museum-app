@@ -2,65 +2,11 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.image import Image
+from kivy.uix.button import Button
 from kivy.properties import StringProperty, NumericProperty
 from kivy.uix.spinner import Spinner
+from kivy.app import App
 
-
-class HeaderWidget(BoxLayout):
-    # Proprietà per la sorgente dell'immagine del logo
-    logo_source = StringProperty('utils/IMG_Test3.png')  # Logo predefinito
-
-    def __init__(self, **kwargs):
-        super(HeaderWidget, self).__init__(**kwargs)
-        self.orientation = 'horizontal'
-
-        # Sezione logo (30%)
-        logo_layout = BoxLayout(size_hint_x=0.3, orientation='horizontal', padding=[20, 20, 20, 20])
-
-        # Aggiungi l'immagine del logo
-        self.logo_image = Image(source=self.logo_source, allow_stretch=True, keep_ratio=True)
-        logo_layout.add_widget(self.logo_image)
-
-        # Spacer per occupare lo spazio disponibile a destra
-        logo_spacer = BoxLayout(size_hint_x=1)  # Occupare tutto lo spazio disponibile
-        logo_layout.add_widget(logo_spacer)
-
-        # Aggiungi il layout del logo al widget principale
-        self.add_widget(logo_layout)
-
-        # Sezione centrale (40%)
-        self.central_layout = BoxLayout(size_hint_x=0.4)
-        self.add_widget(self.central_layout)
-
-        # Sezione scelta lingua (30%)
-        language_layout = BoxLayout(size_hint_x=0.3, orientation='horizontal', padding=[20, 20, 20, 20])
-
-        # Spacer per occupare lo spazio disponibile a sinistra
-        language_spacer = BoxLayout(size_hint_x=1)  # Occupare tutto lo spazio disponibile a sinistra
-        language_layout.add_widget(language_spacer)
-
-        # Spinner per la selezione della lingua
-        self.language_spinner = Spinner(
-            text='IT',  # Imposta la lingua predefinita
-            values=['IT', 'EN'],  # Le lingue selezionabili
-            size_hint_x=None,
-            width=100,
-            font_size=20,
-            color=[1, 1, 1, 1],  # Testo bianco
-            background_color=[0.447, 0.106, 0.157, 1],  # Sfondo Bordeaux 
-            background_normal='',  # Rimuove lo sfondo normale
-            background_down=''  # Rimuove lo sfondo quando è premuto
-        )
-        language_layout.add_widget(self.language_spinner)
-
-        # Aggiungi il layout della lingua all'header
-        self.add_widget(language_layout)
-
-    def update_logo(self, new_logo_path):
-        """Aggiorna l'immagine del logo."""
-        self.logo_source = new_logo_path
-        self.logo_image.source = self.logo_source
-        self.logo_image.reload()  # Ricarica l'immagine per applicare le modifiche
 
 class ContentWidget(BoxLayout):
     # Proprietà per il testo, immagine e dimensione del font del testo principale
