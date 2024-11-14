@@ -1,0 +1,35 @@
+# Usa una versione di Python leggera come immagine di base
+FROM python:3.11-slim
+
+# Installa Xvfb e altre dipendenze necessarie per Kivy
+RUN apt-get update && apt-get install -y \
+    xclip \
+    xsel \
+    xvfb \
+    libsdl2-2.0-0 \
+    libsdl2-image-2.0-0 \
+    libsdl2-mixer-2.0-0 \
+    libsdl2-ttf-2.0-0 \
+    libportmidi0 \
+    libswscale-dev \
+    libavformat-dev \
+    libavcodec-dev \
+    zlib1g-dev \
+    libmtdev1 \
+    x11-utils \
+    xorg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia i file di progetto nel container
+WORKDIR /src/app
+COPY . /src/app
+
+# Installa le dipendenze da requirements.txt (assicurati che psycopg2 sia incluso)
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Aggiungi PYTHONPATH per assicurare che Python trovi i moduli nelle sottodirectory
+ENV PYTHONPATH="/src/app"
+
+# Imposta Xvfb come display virtuale all'avvio del container
+CMD ["xvfb-run", "-s", "-screen 0 800x600x16", "python", "main.py"]

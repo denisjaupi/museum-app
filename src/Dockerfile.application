@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+# Setta la working directory
+WORKDIR /app
+
+# Copia tutti i file necessari per l'applicazione
+COPY ../../ai/utils/ /app/ai/utils/
+COPY ../../ai/gesture_recognition.py /app/ai/
+COPY ../../ai/gesture_interaction.py /app/ai/
+COPY ../../ai/model/gesture_recognition_model.pkl /app/ai/model/
+COPY ../../ai/requirements.txt /app/ai/
+
+
+# EXPOSE 5000 
+
+# Installa le dipendenze
+RUN pip install --no-cache-dir -r ai/requirements.txt
+
+# Comando per avviare l'applicazione principale
+CMD ["python", "/app/gesture_interaction.py"]

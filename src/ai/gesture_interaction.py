@@ -1,6 +1,5 @@
 import cv2
 import mediapipe as mp
-import numpy as np
 import gesture_recognition as gr
 from utils import zooming_gesture as zg
 from utils import indexUp_gesture as ig
@@ -56,7 +55,7 @@ def main():
     gesture_interaction = GestureInteraction()
 
     # Carica un'immagine da visualizzare e zoomare (schermo intero)
-    image_path = 'src/app/utils/IMG_Test.jpg'  
+    image_path = 'src/app/images/operas/cappella_magi_est.jpg'  
     gesture_interaction.set_image(image_path)
 
     # Imposta la finestra di visualizzazione per l'immagine zoomata

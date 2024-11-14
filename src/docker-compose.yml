@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  dataset:
+    build:
+      context: .
+      dockerfile: Dockerfile.dataset
+    volumes:
+      - ./src/ai/dataset:/app/ai/dataset
+    container_name: dataset_container
+
+  model:
+    build:
+      context: .
+      dockerfile: Dockerfile.model
+    volumes:
+      - ./src/ai/model:/app/ai/model
+      - ./src/ai/dataset:/app/ai/dataset
+    container_name: model_container
+    depends_on:
+      - dataset
+
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile.application
+    volumes:
+      - ./src/ai/utils:/app/ai/utils
+      - ./src/ai/model:/app/ai/model
+    container_name: application_container
+    depends_on:
+      - model
+    devices:
+      - "/dev/video0:/dev/video0"  # Collega la webcam al container

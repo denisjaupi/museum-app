@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+# Setta la working directory
+WORKDIR /app
+
+# Copia i file necessari per l'addestramento
+COPY ../../ai/model/ /app/ai/model/
+COPY ../../ai/dataset/gestures_data.csv /app/ai/dataset/
+COPY ../../ai/requirements.txt /app/ai/
+
+# Installa le dipendenze
+RUN pip install --no-cache-dir -r ai/requirements.txt
+
+# Comando per addestrare il modello
+CMD ["python", "/app/model/train_model.py"]
