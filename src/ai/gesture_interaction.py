@@ -1,20 +1,20 @@
 import cv2
 import mediapipe as mp
-import gesture_recognition as gr
-from utils import zooming_gesture as zg
-from utils import indexUp_gesture as ig
-from utils import indexMiddleUp_gesture as img
+from ai.gesture_recognition import GestureModelDetector as gr
+# from utils import zooming_gesture as zg
+from ai.utils import indexUp_gesture as ig
+from ai.utils import indexMiddleUp_gesture as img
 
 
 class GestureInteraction:
 
     def __init__(self):
-        self.image = None  # L'immagine per lo zoom
-        self.zoomed_image = None  # Immagine zoomata
+        # self.image = None 
+        # self.zoomed_image = None  
 
         self.index_up_controller = ig.IndexUpController()
         self.index_middle_up_controller = img.IndexMiddleUpController()
-        self.zooming_controller = zg.ZoomingController()
+        # self.zooming_controller = zg.ZoomingController()
 
 
     def set_image(self, image_path):
@@ -37,9 +37,9 @@ class GestureInteraction:
         elif gesture_name == "Index middle up":
             print("[INFO] Esecuzione 'Index Middle Up'")
             self.index_middle_up_controller.execute(landmarks)
-        elif gesture_name == "Zoom in / Zoom out":
-            print("[INFO] Esecuzione 'Zoom In/Out'")
-            self.zoomed_image = self.zooming_controller.execute(landmarks, self.image)
+        # elif gesture_name == "Zoom in / Zoom out":
+        #     print("[INFO] Esecuzione 'Zoom In/Out'")
+        #     self.zoomed_image = self.zooming_controller.execute(landmarks, self.image)
         else:
             print("[WARNING] Gesto non riconosciuto.")
 
@@ -55,12 +55,12 @@ def main():
     gesture_interaction = GestureInteraction()
 
     # Carica un'immagine da visualizzare e zoomare (schermo intero)
-    image_path = 'src/app/images/operas/cappella_magi_est.jpg'  
-    gesture_interaction.set_image(image_path)
+    # image_path = 'src/app/images/operas/cappella_magi_est.jpg'  
+    # gesture_interaction.set_image(image_path)
 
     # Imposta la finestra di visualizzazione per l'immagine zoomata
-    cv2.namedWindow("Zoomed Image", cv2.WINDOW_NORMAL)
-    cv2.setMouseCallback("Zoomed Image", gesture_interaction.zooming_controller.set_mouse_position)
+    # cv2.namedWindow("Zoomed Image", cv2.WINDOW_NORMAL)
+    # cv2.setMouseCallback("Zoomed Image", gesture_interaction.zooming_controller.set_mouse_position)
 
     # Inizializza la webcam
     cap = cv2.VideoCapture(0)
@@ -87,14 +87,14 @@ def main():
 
             # Verifica i gesti riconosciuti dal modello e gestisci le azioni
             if gesture_name == "Index up" or\
-                 gesture_name == "Index middle up" or\
-                     gesture_name == "Zoom in / Zoom out":
+                 gesture_name == "Index middle up": #or\
+                     # gesture_name == "Zoom in / Zoom out":
                 gesture_interaction.handle_gesture(gesture_name, landmarks)
 
                 # Mostra l'immagine zoomata solo se c'è stato uno zoom
-                zoomed_image = gesture_interaction.get_zoomed_image()
-                if zoomed_image is not None:
-                    cv2.imshow('Zoomed Image', zoomed_image)
+                # zoomed_image = gesture_interaction.get_zoomed_image()
+                # if zoomed_image is not None:
+                #     cv2.imshow('Zoomed Image', zoomed_image)
 
             else:
                 # Se non viene riconosciuto nessuno degli altri gesti, 
@@ -107,7 +107,7 @@ def main():
             
         else:
             gesture_name = "Hand not detected"
-            gesture_interaction.zooming_controller.reset_zoom()
+            # gesture_interaction.zooming_controller.reset_zoom()
 
         # Disegna i landmarks sul frame e visualizza il nome del gesto
         if results.multi_hand_landmarks:

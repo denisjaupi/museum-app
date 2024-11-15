@@ -8,7 +8,7 @@
 
         BoxLayout:
             orientation: 'horizontal'
-            size_hint_y: 0.2
+            size_hint_y: 0.1
             canvas.before:
                 Color:
                     rgba: 1, 1, 1, 1  # White background
@@ -18,53 +18,45 @@
 
             # Logo Section (30%)
             BoxLayout:
-                size_hint_x: 0.3
-                orientation: 'horizontal'
-                padding: [20, 20, 20, 20]
+                size_hint_x: 0.2
+                padding: [0, 20, 0, 0]
 
                 Image:
-                    source: 'images/operas/logo/IMG_Logo.png'
+                    source: 'images/operas/first_view_images/IMG_Logo.png'
                     allow_stretch: True
                     keep_ratio: True
+                    
 
-                BoxLayout:
-                    size_hint_x: 1  # Spacer
 
             # Central Section (30%) - Empty space for centering purposes
             BoxLayout:
-                size_hint_x: 0.4
+                size_hint_x: 0.6
 
             # Login Button Section (30%)
             BoxLayout:
-                size_hint_x: 0.3
+                size_hint_x: 0.2
                 orientation: 'horizontal'
-                padding: [20, 20, 20, 20]
+                spacing: 20
+                padding: 20
 
                 Button:
-                    text: 'Login'
-                    size_hint_x: None
-                    font_size: 20
+                    text: 'LOGIN'
+                    size_hint_x: 0.5
+                    font_size: 40
                     color: 1, 1, 1, 1  # White text
                     background_color: 0.447, 0.106, 0.157, 1  # Bordeaux background
                     background_normal: ''  # Remove default background
                     background_down: ''
                     on_release: app.root.current = 'login'  # Navigate to login screen
 
-            # Language Selection Section (30%)
-            BoxLayout:
-                size_hint_x: 0.2
-                orientation: 'horizontal'
-                padding: [20, 20, 20, 20]
-
 
                 Spinner:
                     text: 'IT'  # Default language
                     values: ['IT', 'EN']  # Available languages
-                    size_hint_x: None
-                    
+                    size_hint_x: 0.5
                     width: 100
                     height: 50
-                    font_size: 20
+                    font_size: 40
                     color: 1, 1, 1, 1  # White text
                     background_color: 0.447, 0.106, 0.157, 1  # Bordeaux background
                     background_normal: ''  # Remove default background
@@ -73,17 +65,40 @@
         ###################################################################
         # Main Grid Section - 60% of the screen
 
-        GridLayout:
+        BoxLayout:
             id: main_grid
-            size_hint_y: 0.6
-            cols: 1
-            spacing: 10
+            size_hint_y: 0.7
+            orientation: 'horizontal'
             canvas.before:
                 Color:
                     rgba: 1, 1, 1, 1  # White background
                 Rectangle:
                     pos: self.pos
                     size: self.size
+
+            BoxLayout:
+                size_hint_x: 0.5
+                orientation: 'vertical'
+
+                GIFImage:
+                    size_hint_y: 0.4
+                    gif_path: 'src/app/images/operas/first_view_images/FingerPointer.gif'
+                    allow_stretch: True
+                    keep_ratio: True
+
+                GIFImage:
+                    size_hint_y: 0.6
+                    gif_path: 'src/app/images/operas/first_view_images/IMG_Testo.png'
+                    allow_stretch: True
+                    keep_ratio: True
+
+            BoxLayout:
+                size_hint_x: 0.5
+
+                Image:
+                    source: 'utils/IMG_Test2.png'
+                    allow_stretch: True
+                    keep_ratio: True
 
         ###################################################################
         # Footer Section - 20% of the screen

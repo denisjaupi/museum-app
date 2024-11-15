@@ -1,2 +1,0 @@
-kivy
-psycopg2-binary

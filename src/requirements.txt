@@ -9,3 +9,5 @@ scikit-learn
 
 pyautogui
 
+kivy
+psycopg2-binary
