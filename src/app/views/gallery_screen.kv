@@ -5,9 +5,11 @@
     TextInput:
         id: description_input
         hint_text: ''
+        padding: 20
         background_color: 0.447, 0.106, 0.157, 1  # Bordeaux
         foreground_color: 1, 1, 1, 1  # White text
-        font_size: 36
+        font_size: self.height * 0.12
+        font_name: 'src/app/utils/Montserrat-Bold.ttf'
         multiline: True
         readonly: True
         size_hint: 1, 1
@@ -21,12 +23,12 @@
 
 ###################################################################
         
+        ###################################################################
         # Header Section - Logo, Login Button, and Language Spinner
 
         BoxLayout:
-            id: header_widget
             orientation: 'horizontal'
-            size_hint_y: 0.2
+            size_hint_y: 0.1
             canvas.before:
                 Color:
                     rgba: 1, 1, 1, 1  # White background
@@ -36,39 +38,39 @@
 
             # Logo Section (30%)
             BoxLayout:
-                size_hint_x: 0.3
-                orientation: 'horizontal'
-                padding: [20, 20, 20, 20]
+                size_hint_x: 0.2
+                padding: [0, 20, 0, 0]
 
                 Image:
-                    source: 'images/operas/logo/IMG_Logo.png'
+                    source: 'images/operas/first_view_images/IMG_Logo.png'
                     allow_stretch: True
                     keep_ratio: True
+                    
 
-                BoxLayout:
-                    size_hint_x: 1  # Spacer
 
             # Central Section (30%) - Empty space for centering purposes
             BoxLayout:
-                size_hint_x: 0.4
+                size_hint_x: 0.6
 
-            # Language Selection Section (30%)
+            # Login Button Section (30%)
             BoxLayout:
-                id: language_widget
                 size_hint_x: 0.2
                 orientation: 'horizontal'
-                padding: [20, 20, 20, 20]
+                spacing: 20
+                padding: 20
 
+                BoxLayout:
+                    size_hint_x: 0.5
 
                 Spinner:
                     id: language_spinner
                     text: 'IT'  # Default language
+                    font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                     values: ['IT', 'EN']  # Available languages
-                    size_hint_x: None
-                    
+                    size_hint_x: 0.5
                     width: 100
                     height: 50
-                    font_size: 20
                     color: 1, 1, 1, 1  # White text
                     background_color: 0.447, 0.106, 0.157, 1  # Bordeaux background
                     background_normal: ''  # Remove default background
@@ -101,12 +103,28 @@
                     orientation: 'horizontal'
 
                     Button:
-                        text: 'Back'
                         on_release: app.root.current = 'benvenuto'  # Cambia a welcome_screen
                         size_hint: (1, 1)  # Riempi tutto lo spazio disponibile
                         background_normal: ''
                         background_color: [0.9, 0.9, 0.9, 1]
-                        padding: [20, 20]  # Maggior padding
+                        text: 'Back'
+                        font_size: self.height * 0.3
+                        font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
+                        color: [0, 0, 0, 1]
+                        
+
+
+                        BoxLayout:
+                            orientation: 'horizontal'
+                            padding: [10, 10, 10, 10]
+                            spacing: 10
+
+                            Image:
+                                source: 'src/app/utils/IMG_Test2.png'  # Percorso dell'icona
+                                size_hint: None, None
+                                size: 24, 24  # Dimensione dell'icona
+
+
 
                 Widget:
                     size_hint_x: None  # Imposta size_hint_x a None per controllare la larghezza
@@ -119,7 +137,8 @@
 
                     Label:
                         text: 'Ispeziona'
-                        font_size: 64
+                        font_size: self.height * 0.4
+                        font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                         color: [0.447, 0.106, 0.157, 1]
                         halign: 'left'
                         valign: 'center'
@@ -136,9 +155,11 @@
                 ScrollButton:
                     text: '<'  # Usa l'icona di freccia o sostituisci con immagine
                     on_release: root.scroll_left()
+                    font_name: 'src/app/utils/NotoSansSymbols-Black.ttf'
                     size_hint: 0.1, 1
                     background_normal: ''
                     background_color: [0.9, 0.9, 0.9, 1]
+                    color: [0, 0, 0, 1]
                     padding: [20, 20]  # Maggior padding
 
                 # Layout griglia con card
@@ -151,10 +172,12 @@
                 # Bottone per scorrere a destra
                 ScrollButton:
                     text: '>'
+                    font_name: 'src/app/utils/NotoSansSymbols-Black.ttf'
                     on_release: root.scroll_right()
                     size_hint: 0.1, 1
                     background_normal: ''
                     background_color: [0.9, 0.9, 0.9, 1]
+                    color: [0, 0, 0, 1]
                     padding: [20, 20]  # Maggior padding
 
 ###################################################################

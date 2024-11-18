@@ -42,7 +42,8 @@
                 Button:
                     text: 'LOGIN'
                     size_hint_x: 0.5
-                    font_size: 40
+                    font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                     color: 1, 1, 1, 1  # White text
                     background_color: 0.447, 0.106, 0.157, 1  # Bordeaux background
                     background_normal: ''  # Remove default background
@@ -52,11 +53,12 @@
 
                 Spinner:
                     text: 'IT'  # Default language
+                    font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                     values: ['IT', 'EN']  # Available languages
                     size_hint_x: 0.5
                     width: 100
                     height: 50
-                    font_size: 40
                     color: 1, 1, 1, 1  # White text
                     background_color: 0.447, 0.106, 0.157, 1  # Bordeaux background
                     background_normal: ''  # Remove default background
@@ -118,9 +120,10 @@
             Button:
                 text: 'Inizia la visita!'
                 font_size: self.height * 0.4
+                font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                 halign: 'center'
                 valign: 'middle'
                 background_color: [0.9, 0.9, 0.9, 1]  # White background
-                color: 0, 0, 0, 1  # Black text
+                color: [0, 0, 0, 1]   # Black text
                 background_normal: ''  # Remove default background
                 on_release: app.root.current = 'galleria'  # Navigate to gallery screen

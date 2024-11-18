@@ -88,6 +88,16 @@ class DBConnection:
             return result[0][0]  # Restituisce l'hash della password
         return None
 
+    def get_annotations_for_image(self, immagine_id, language='it'):
+        """Recupera tutte le annotazioni per una specifica immagine e lingua."""
+        query = """
+        SELECT titolo->>%s, testo->>%s, coordinata_x, coordinata_y
+        FROM dettagli_opera
+        WHERE immagine_id = %s
+        """
+        params = (language, language, immagine_id)
+        return self.execute_query(query, params)
+
 
     def close(self):
         """Chiude la connessione al database."""

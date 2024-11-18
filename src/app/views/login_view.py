@@ -13,8 +13,8 @@ class LoginScreen(Screen):
         self.ids.password_error.opacity = 0
 
         # Crea una connessione al database
-        db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
-        db.connect()  
+        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
+        db.connect()
 
         # Recupera l'hash della password dal database per il nome utente
         stored_password_hash = db.get_password_hash(username)

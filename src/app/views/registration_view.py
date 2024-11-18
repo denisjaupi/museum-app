@@ -12,8 +12,8 @@ class RegistrationScreen(Screen):
         # Verifica se le password corrispondono
         if password == confirm_password:
             # Connessione al database
-            db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
-            db.connect()            
+            db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
+            db.connect()         
             # Controlla se l'utente esiste già
             existing_user = db.get_user_by_username(username)
             if existing_user:

@@ -58,9 +58,8 @@ class Card(ButtonBehavior, BoxLayout):
         # Aggiorna il Label per mostrare il titolo invece della descrizione
         self.label = Label(
             text=self.title,  # Cambiato a self.title per mostrare il titolo
-            font_size=23,
-            padding=[20, 20],
-            halign='left',
+            font_name = 'src/app/utils/Montserrat-Bold.ttf',
+            halign='center',
             valign='top',
             size_hint_y=0.2,
             text_size=(self.width, None),
@@ -135,24 +134,27 @@ class GalleryScreen(Screen):
         if footer:
             footer.update_text('')
             
+
     def fetch_opere_d_arte(self):
         """Recupera i dati delle opere d'arte dal database e aggiorna card_data."""
-        db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
+        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
         db.connect()  # Connessione al database
 
-        # Modifica la query per includere anche l'ID dell'opera
+        # Modifica la query per includere solo le opere con id_immagine=1
         query = f"""
-            SELECT id, titolo->'{self.current_language}', descrizione->'{self.current_language}', immagine_principale 
-            FROM opere_d_arte;
+            SELECT id, titolo->'{self.current_language}', descrizione->'{self.current_language}', percorso_immagine 
+            FROM opere_d_arte 
+            WHERE immagine_id = 1;
         """
         results = db.execute_query(query)
-        
+
         if results:
             # Aggiungi l'ID dell'opera alla card_data
             self.card_data = [
                 {'id': row[0], 'title': row[1], 'description': row[2], 'image_source': row[3]} for row in results
             ]
         db.close()  # Chiudi la connessione
+
 
 
     def update_cards(self):
