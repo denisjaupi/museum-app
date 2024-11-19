@@ -28,6 +28,7 @@ class FooterField(BoxLayout):
         self.add_widget(self.text_input)
 
     def update_text(self, new_text):
+        print(f"Aggiornamento footer con testo: {new_text}")
         self.text_input.text = new_text
 
 
@@ -124,19 +125,36 @@ class OperaImageViewer(RelativeLayout):
         for btn in self.annotations:
             self.content.remove_widget(btn)
         self.annotations.clear()
-                
+        
     def add_annotation(self, rel_x, rel_y, text, callback):
-        """Aggiunge un'annotazione alla posizione relativa specificata"""
+        """Aggiunge un'annotazione alla posizione relativa specificata, con dimensione adattabile"""
+        print(f"Aggiunta annotazione: {text} alle coordinate ({rel_x}, {rel_y})")
+        
+        # Crea il pulsante per l'annotazione
         btn = Button(
             text='',
-            size_hint=(None, None),
-            size=(50, 50),
-            pos_hint={'x': rel_x - 0.025, 'y': rel_y - 0.025},  # Aggiusta per centrare il bottone
+            size_hint=(None, None),  # Disabilita il ridimensionamento automatico
             background_color=(1, 0, 0, 0.5),
             on_release=lambda btn: callback(text)
         )
+        
+        # Aggiusta dinamicamente la dimensione del pulsante in base alle dimensioni dell'immagine
+        def update_button_size(*args):
+            """Aggiorna la dimensione del pulsante in base alla dimensione corrente dell'immagine"""
+            base_size = 0.07  # Frazione della larghezza dell'immagine da usare come dimensione del pulsante
+            btn.size = (self.image.width * base_size, self.image.height * base_size)
+        
+        # Aggiorna la dimensione iniziale del pulsante
+        update_button_size()
+        
+        # Lega la funzione di aggiornamento alla variazione delle dimensioni dell'immagine
+        self.image.bind(size=update_button_size)
+        
+        # Posiziona il pulsante
+        btn.pos_hint = {'x': rel_x - 0.03, 'y': rel_y - 0.03}  # Centrare il bottone rispetto all'annotazione
         self.annotations.append(btn)
         self.content.add_widget(btn)
+
 
 
 class OperaScreen(Screen):
@@ -146,8 +164,7 @@ class OperaScreen(Screen):
     opera_id = NumericProperty(0)
     current_language = StringProperty('it')  
 
-    # Aggiungiamo variabili per gestire l'elenco delle immagini e l'indice corrente
-    image_paths = ListProperty([])  # Lista dei percorsi delle immagini per l'opera
+    image_paths = ListProperty([])  # Lista delle immagini relative all'opera (percorso + immagine_id)
     current_image_index = NumericProperty(0)  # Indice dell'immagine corrente
 
     def on_pre_enter(self):
@@ -155,90 +172,104 @@ class OperaScreen(Screen):
         self.update_display()
         
     def on_leave(self):
-        """Quando la schermata sta per essere lasciata"""
-        # Resetta lo stato dell'immagine e delle annotazioni
+        """Resetta lo stato dell'immagine e delle annotazioni quando si lascia la schermata."""
         self.image_source = ''
         self.annotations.clear()
         self.viewer.clear_annotations()
-        self.ids.footer_field.update_text('')  # Azzera il testo nel footer
-
-
+        self.ids.footer_field.update_text('')
+    
     def load_opera_images(self):
-        """Carica l'immagine principale e tutte le immagini correlate a questa opera dal database."""
+        """Carica i dettagli e l'immagine principale dell'opera selezionata."""
         if not self.opera_id:
+            print("Errore: opera_id non è impostato.")
             return
 
-        db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
-        db.connect()
+        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
+        try:
+            db.connect()
 
-        # Query per ottenere l'immagine principale dell'opera
-        query_main_image = """
-            SELECT immagine_principale 
-            FROM opere_d_arte 
-            WHERE id = %s
-        """
-        result_main_image = db.execute_query(query_main_image, (self.opera_id,))
-        
-        # Aggiungi l'immagine principale come primo elemento nella lista `image_paths`
-        if result_main_image:
-            main_image_path = result_main_image[0][0]
-            self.image_paths = [main_image_path]  # Inizializza `image_paths` con l'immagine principale
+            # Query per ottenere l'immagine principale dell'opera e i dettagli
+            query = """
+                SELECT id, immagine_id, percorso_immagine
+                FROM opere_d_arte
+                WHERE id = %s
+            """
+            result = db.execute_query(query, (self.opera_id,))
 
-        # Query per ottenere tutte le immagini correlate all'opera
-        query_related_images = """
-            SELECT percorso 
-            FROM immagini_opera 
-            WHERE opera_id = %s
-            ORDER BY id  -- Assicura un ordine costante, ad esempio per id
-        """
-        result_related_images = db.execute_query(query_related_images, (self.opera_id,))
-        db.close()
+            # Debug: stampa il risultato della query
+            print(f"Risultato della query opere_d_arte: {result}")
 
-        # Aggiungi i percorsi delle immagini correlate a `image_paths`
-        related_image_paths = [row[0] for row in result_related_images]
-        self.image_paths.extend(related_image_paths)  # Aggiunge le immagini correlate alla lista
+            # Verifica che il risultato non sia vuoto
+            if not result:
+                print(f"Nessun dato trovato per opera_id {self.opera_id}.")
+                self.image_paths = []
+            else:
+                # Popola image_paths con i dati dell'immagine principale
+                self.image_paths = [{'immagine_id': row[1], 'percorso_immagine': row[2]} for row in result]
 
-        # Imposta l'indice corrente su 0 (prima immagine, che è quella principale)
-        self.current_image_index = 0
+                # Imposta il primo elemento come immagine corrente
+                self.current_image_index = 0
+                self.image_source = self.image_paths[0]['percorso_immagine']
 
-        # Carica anche le annotazioni per la prima immagine (se necessario)
-        self.load_annotations_for_current_image()
+                # Carica annotazioni per la prima immagine (se necessario)
+                self.load_annotations_for_current_image()
+
+        except Exception as e:
+            print(f"Errore durante il caricamento dell'opera_id {self.opera_id}: {e}")
+            self.image_paths = []
+        finally:
+            db.close()
+
 
     def load_annotations_for_current_image(self):
-        """Carica le annotazioni relative all'immagine corrente"""
-        if not self.image_paths:
+        """Carica le annotazioni relative all'immagine corrente."""
+        if not self.image_paths or not self.image_paths[self.current_image_index]:
+            print("Errore: nessuna immagine caricata o immagine corrente non valida.")
             return
-        
-        db = DBConnection(host="localhost", port="5432", database="museum_db", user="postgres", password="postgres")
-        db.connect()
-        
-        # Esempio di query per le annotazioni specifiche dell'opera; adattare se necessario
-        query_annotations = f"""
-            SELECT titolo->>'{self.current_language}', testo->>'{self.current_language}', coordinata_x, coordinata_y 
-            FROM dettagli_opera 
-            WHERE opera_id = %s
-        """
-        result_annotations = db.execute_query(query_annotations, (self.opera_id,))
-        db.close()
-        
-        if result_annotations:
-            self.annotations = [
-                {'rel_x': row[2], 'rel_y': row[3], 'text': f"{row[0]}\n {row[1]}"}
-                for row in result_annotations
-            ]
-        else:
+
+        immagine_id = self.image_paths[self.current_image_index]['immagine_id']
+        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
+        try:
+            db.connect()
+
+            # Query per ottenere annotazioni specifiche per immagine_id
+            query_annotations = f"""
+                SELECT titolo->>'{self.current_language}', testo->>'{self.current_language}', coordinata_x, coordinata_y
+                FROM dettagli_opera
+                WHERE immagine_id = %s
+            """
+            result_annotations = db.execute_query(query_annotations, (immagine_id,))
+
+            # Debug: stampa il risultato della query
+            print(f"Annotazioni trovate per immagine_id {immagine_id}: {result_annotations}")
+
+            # Popola la lista delle annotazioni
+            if result_annotations:
+                self.annotations = [
+                    {'rel_x': row[2], 'rel_y': row[3], 'text': f"{row[0]}\n{row[1]}"}
+                    for row in result_annotations
+                ]
+            else:
+                self.annotations = []
+
+        except Exception as e:
+            print(f"Errore durante il caricamento delle annotazioni per immagine_id {immagine_id}: {e}")
             self.annotations = []
+        finally:
+            db.close()
+
 
     def show_previous_image(self):
         """Mostra l'immagine precedente nella lista, se disponibile."""
         if not self.image_paths:
             return
 
-        # Decrementa l'indice e torna all'ultimo elemento se siamo a inizio lista
         self.current_image_index = (self.current_image_index - 1) % len(self.image_paths)
-        self.image_source = self.image_paths[self.current_image_index]
+        self.image_source = self.image_paths[self.current_image_index]['percorso_immagine']
 
         # Aggiorna la visualizzazione
+        self.annotations.clear()
+        self.load_annotations_for_current_image()
         self.update_display()
 
     def show_next_image(self):
@@ -246,28 +277,23 @@ class OperaScreen(Screen):
         if not self.image_paths:
             return
 
-        # Incrementa l'indice e torna al primo elemento se siamo alla fine della lista
         self.current_image_index = (self.current_image_index + 1) % len(self.image_paths)
-        self.image_source = self.image_paths[self.current_image_index]
-        
+        self.image_source = self.image_paths[self.current_image_index]['percorso_immagine']
+
         # Aggiorna la visualizzazione
+        self.annotations.clear()
+        self.load_annotations_for_current_image()
         self.update_display()
 
     def show_annotation_text(self, text):
-        """Mostra il testo dell'annotazione nel footer"""
-        self.ids.footer_field.update_text(text) 
+        """Mostra il testo dell'annotazione nel footer."""
+        self.ids.footer_field.update_text(text)
 
     def update_display(self):
         """Aggiorna il visualizzatore dell'opera con l'immagine corrente e le annotazioni."""
         if self.viewer:
-            
-            # Carica l'immagine corrente
-            self.viewer.load_image(self.image_source)
-            
-            # Pulisce le annotazioni esistenti
-            self.viewer.clear_annotations()
-
-            # Aggiunge le annotazioni
+            self.viewer.load_image(self.image_source)  # Carica l'immagine corrente
+            self.viewer.clear_annotations()  # Pulisce le annotazioni esistenti
             for annot in self.annotations:
                 self.viewer.add_annotation(
                     annot['rel_x'],
@@ -275,16 +301,13 @@ class OperaScreen(Screen):
                     annot['text'],
                     self.show_annotation_text
                 )
-        
+
+
     def on_info_button_press(self):
-        """Gestisce la pressione del pulsante info_butt e naviga alla schermata InfoOperaScreen."""
+        """Naviga alla schermata InfoOperaScreen con i dettagli dell'immagine corrente."""
         app = App.get_running_app()
-        info_screen = app.root.get_screen('info_opera')  # Ottieni InfoOperaScreen direttamente da ScreenManager
-        
-        # Passa i parametri a info_screen
+        info_screen = app.root.get_screen('info_opera')
         info_screen.image_source = self.image_source
         info_screen.opera_id = self.opera_id
         info_screen.current_language = self.current_language
-        
-        # Cambia la schermata corrente a 'info_opera'
         app.root.current = 'info_opera'

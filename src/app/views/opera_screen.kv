@@ -50,28 +50,32 @@
                 size_hint_x: 0.2
                 
                 Button:
-                    text: ' <'
+                    text: 'Back'
                     font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                     halign: 'center'
                     valign: 'middle'
+                    color: 0, 0, 0, 1
                     background_normal: ''
                     padding: 10
                     background_color: [0.9, 0.9, 0.9, 1]
-                    on_release: root.show_previous_image()
-            
+                    on_release: app.root.current = 'galleria'
+
             BoxLayout:
                 id: backButt_box
                 size_hint_x: 0.3
                 padding: 10
 
                 Button:
-                    text: 'Back'
+                    text: '<'
                     font_size: self.height * 0.4
+                    font_name: 'src/app/utils/NotoSansSymbols-Black.ttf'
                     halign: 'center'
                     valign: 'middle'
+                    color: 0, 0, 0, 1
                     background_normal: ''
                     background_color: [0.9, 0.9, 0.9, 1]
-                    on_release: app.root.current = 'galleria'
+                    on_release: root.show_previous_image()
 
             BoxLayout:
                 id: infoButt_box
@@ -79,28 +83,32 @@
                 padding: 10
 
                 Button:
-                    id: info_butt
-                    text: 'Info'
+                    text: '>'
                     font_size: self.height * 0.4
+                    font_name: 'src/app/utils/NotoSansSymbols-Black.ttf'
                     halign: 'center'
                     valign: 'middle'
+                    color: 0, 0, 0, 1
                     background_normal: ''
+                    padding: 10
                     background_color: [0.9, 0.9, 0.9, 1]
-                    on_release: root.on_info_button_press()
+                    on_release: root.show_next_image()
             
             BoxLayout:
                 id: rightButt_box
                 size_hint_x: 0.2
                 
                 Button:
-                    text: '>'
+                    id: info_butt
+                    text: 'Info'
                     font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                     halign: 'center'
                     valign: 'middle'
+                    color: 0, 0, 0, 1
                     background_normal: ''
-                    padding: 10
                     background_color: [0.9, 0.9, 0.9, 1]
-                    on_release: root.show_next_image()
+                    on_release: root.on_info_button_press()
         
         # Footer (20% dello schermo)
         FooterField:

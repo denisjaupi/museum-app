@@ -30,13 +30,15 @@
                     text: 'Titolo:'
                     size_hint_y: 0.1
                     color: 0.5, 0.0, 0.1, 1  # Bordeaux per il testo
-                    font_size: '18sp'
+                    font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
 
                 Label:
                     id: title_box
                     text: 'Titolo dell\'opera'
+                    font_name: 'src/app/utils/Montserrat-Bold.ttf'
                     size_hint_y: 0.1
-                    color: 0.5, 0.0, 0.1, 1  # Bordeaux per il testo
+                    color: 0, 0, 0, 1  
                     font_size: '16sp'
                     canvas.before:
                         Color:
@@ -49,12 +51,14 @@
                     id: author_label
                     text: 'Autore:'
                     size_hint_y: 0.1
-                    color: 0, 0, 0, 1
-                    font_size: '18sp'
+                    color: 0.5, 0.0, 0.1, 1  # Bordeaux per il testo
+                    font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
 
                 Label:
                     id: author_box
                     text: 'Nome dell\'autore'
+                    font_name: 'src/app/utils/Montserrat-Bold.ttf'
                     size_hint_y: 0.1
                     color: 0, 0, 0, 1
                     font_size: '16sp'
@@ -73,7 +77,8 @@
                     size_hint_y: 0.2
                     text: 'Descrizione dell\'opera'
                     color: 0.5, 0.0, 0.1, 1  # Bordeaux per il testo
-                    font_size: '18sp'
+                    font_size: self.height * 0.4
+                    font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
 
                 ScrollView:
                     size_hint_y: 0.8
@@ -81,14 +86,17 @@
                     Label:
                         id: description_box
                         text: 'Descrizione completa dell\'opera'
+                        font_name: 'src/app/utils/Montserrat-Bold.ttf'
                         size_hint_y: None
                         color: 0, 0, 0, 1  # Testo nero per contrasto
                         font_size: '16sp'
                         text_size: self.width, None  # Permette il wrapping del testo in base alla larghezza
-                        halign: 'left'               # Allineamento orizzontale a sinistra
+                        halign: 'center'               # Allineamento orizzontale a sinistra
                         valign: 'top'                # Allineamento verticale in alto
                         height: self.texture_size[1]  # Altezza dinamica basata sul testo
-                        padding_y: 10                 # Spazio superiore per evitare che tocchi i margini
+                        padding_y: 20    
+                        padding: 20             # Spazio superiore per evitare che tocchi i margini
+                        line_height: 1.5 
                         canvas.before:
                             Color:
                                 rgba: 0.9, 0.9, 0.9, 1  # Sfondo grigio chiaro
@@ -102,24 +110,23 @@
             orientation: 'horizontal'
 
             BoxLayout:
-                size_hint_x: 0.3
+                size_hint_x: 0.4
 
             Button:
-                id: back_butt
-                size_hint_x: 0.3
+                size_hint_x: 0.2
                 text: 'Back'
                 font_size: self.height * 0.4
+                font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                 halign: 'center'
                 valign: 'middle'
-                size_hint_x: 0.3  # Bottone più piccolo
-                pos_hint: {'x': 0, 'y': 0}  # Allineato in basso a sinistra
+                color: 0, 0, 0, 1
                 background_normal: ''
-                background_color: [0.9, 0.9, 0.9, 1] # Sfondo bordeaux
-                color: 1, 1, 1, 1  # Testo bianco
+                padding: 10
+                background_color: [0.9, 0.9, 0.9, 1]
                 on_release: root.on_back_button_press()
 
             BoxLayout:
-                size_hint_x: 0.3
+                size_hint_x: 0.4
 
         FooterField:
             id: footer_field
