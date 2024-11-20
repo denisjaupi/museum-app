@@ -41,16 +41,3 @@ class InfoOperaScreen(Screen):
             self.ids.title_box.text = title
             self.ids.author_box.text = author
             self.ids.description_box.text = description
-
-    def on_back_button_press(self):
-        """Gestisce la pressione del pulsante info_butt e naviga alla schermata InfoOperaScreen."""
-        app = App.get_running_app()
-        opera_screen = app.root.get_screen('opera')  # Ottieni InfoOperaScreen direttamente da ScreenManager
-        
-        # Passa i parametri a opera_screen
-        opera_screen.image_source = self.image_source
-        opera_screen.opera_id = self.opera_id
-        opera_screen.current_language = self.current_language
-        
-        # Cambia la schermata corrente a 'opera'
-        app.root.current = 'opera'

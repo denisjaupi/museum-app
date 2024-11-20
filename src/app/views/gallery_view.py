@@ -92,7 +92,9 @@ class Card(ButtonBehavior, BoxLayout):
             opera_screen.image_source = self.image_source
             opera_screen.opera_id = self.opera_id  
             opera_screen.current_language = self.gallery_screen.current_language
+            App.get_running_app().root.transition.direction = 'left'  
             App.get_running_app().root.current = 'opera'  
+
 
     def _update_rect(self, instance, value):
         """Assicura che la rect e il testo si aggiornino correttamente durante i cambiamenti di dimensione"""
@@ -176,8 +178,6 @@ class GalleryScreen(Screen):
         empty_slots = self.visible_cards - len(cards_to_display)
         for _ in range(empty_slots):
             self.ids.card_grid.add_widget(Widget())
-
-
 
     def scroll_left(self):
         if self.current_index > 0:

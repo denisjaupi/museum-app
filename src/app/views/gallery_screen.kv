@@ -103,7 +103,9 @@
                     orientation: 'horizontal'
 
                     Button:
-                        on_release: app.root.current = 'benvenuto'  # Cambia a welcome_screen
+                        on_release:
+                            app.root.transition.direction = 'right'  
+                            app.root.current = 'benvenuto'
                         size_hint: (1, 1)  # Riempi tutto lo spazio disponibile
                         background_normal: ''
                         background_color: [0.9, 0.9, 0.9, 1]
@@ -119,15 +121,9 @@
                             padding: [10, 10, 10, 10]
                             spacing: 10
 
-                            Image:
-                                source: 'src/app/utils/IMG_Test2.png'  # Percorso dell'icona
-                                size_hint: None, None
-                                size: 24, 24  # Dimensione dell'icona
-
-
 
                 Widget:
-                    size_hint_x: None  # Imposta size_hint_x a None per controllare la larghezza
+                    size_hint_x: None  
                     width: 20 
 
                 # Colonna destra per la Label Ispeziona
@@ -136,7 +132,7 @@
                     orientation: 'horizontal'
 
                     Label:
-                        text: 'Ispeziona'
+                        text: 'Galleria'
                         font_size: self.height * 0.4
                         font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                         color: [0.447, 0.106, 0.157, 1]

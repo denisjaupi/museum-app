@@ -34,6 +34,7 @@ class MuseumApp(App):
         Builder.load_file('views/add_details_screen.kv')  
 
         sm = ScreenManager()
+
         sm.add_widget(WelcomeScreen(name='benvenuto'))
         sm.add_widget(GalleryScreen(name='galleria'))
         sm.add_widget(OperaScreen(name='opera'))

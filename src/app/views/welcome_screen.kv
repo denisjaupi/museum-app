@@ -98,7 +98,7 @@
                 size_hint_x: 0.5
 
                 Image:
-                    source: 'utils/IMG_Test2.png'
+                    source: 'src/app/images/operas/first_view_images/IMG_Design.png'
                     allow_stretch: True
                     keep_ratio: True
 
@@ -126,4 +126,6 @@
                 background_color: [0.9, 0.9, 0.9, 1]  # White background
                 color: [0, 0, 0, 1]   # Black text
                 background_normal: ''  # Remove default background
-                on_release: app.root.current = 'galleria'  # Navigate to gallery screen
+                on_release:
+                    app.root.transition.direction = 'left'
+                    app.root.current = 'galleria'

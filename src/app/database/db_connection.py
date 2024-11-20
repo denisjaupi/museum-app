@@ -99,6 +99,18 @@ class DBConnection:
         return self.execute_query(query, params)
 
 
+    def insert_annotation(self, id, immagine_id, titolo, testo, coordinata_x, coordinata_y):
+        """Inserisce una nuova annotazione nella tabella dettagli_opera."""
+        query = """
+        INSERT INTO dettagli_opera (id, immagine_id, titolo, testo, coordinata_x, coordinata_y)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        # Rimuovi json.dumps e passa i dizionari direttamente
+        params = (id, immagine_id, titolo, testo, coordinata_x, coordinata_y)
+        self.execute_query(query, params, commit=True)
+
+
+
     def close(self):
         """Chiude la connessione al database."""
         if self.cursor:

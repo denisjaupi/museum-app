@@ -9,6 +9,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.clock import Clock
 from kivy.app import App
+from kivy.uix.widget import Widget
 
 from database.db_connection import DBConnection
 
@@ -126,6 +127,74 @@ class OperaImageViewer(RelativeLayout):
             self.content.remove_widget(btn)
         self.annotations.clear()
         
+    def highlight_button_area(self, button):
+        """Cattura l'area del button con un margine proporzionale e la mostra al posto dell'immagine principale.
+        Rimane visibile fino a quando l'utente non clicca fuori dall'immagine."""
+        if not self.image.texture:
+            print("Errore: l'immagine non ha una texture valida.")
+            return
+
+        # Dimensioni della texture originale
+        texture_width = self.image.texture.width
+        texture_height = self.image.texture.height
+
+        # Coordinate e dimensioni del button rispetto all'immagine visualizzata
+        img_x, img_y = self.image.pos
+        img_width, img_height = self.image.size
+        btn_x, btn_y = button.pos
+        btn_width, btn_height = button.size
+
+        # Calcolo proporzionale rispetto alla texture originale
+        rel_x = (btn_x - img_x) / img_width
+        rel_y = (btn_y - img_y) / img_height
+        rel_width = btn_width / img_width
+        rel_height = btn_height / img_height
+
+        # Aggiungi un margine proporzionale
+        margin = 0.1  # Margine del 10% rispetto alla dimensione originale della texture
+        tex_x_start = max(0, int((rel_x - margin) * texture_width))
+        tex_y_start = max(0, int((rel_y - margin) * texture_height))
+        tex_width = min(texture_width, int((rel_width + 2 * margin) * texture_width))
+        tex_height = min(texture_height, int((rel_height + 2 * margin) * texture_height))
+
+        # Debug: stampa i valori calcolati
+        print(f"Ritaglio texture: x={tex_x_start}, y={tex_y_start}, w={tex_width}, h={tex_height}")
+
+        # Estrai la regione dalla texture
+        cropped_texture = self.image.texture.get_region(tex_x_start, tex_y_start, tex_width, tex_height)
+
+        if not cropped_texture:
+            print("Errore durante il ritaglio della texture.")
+            return
+
+        # Salva la texture originale
+        original_texture = self.image.texture
+
+        # Nascondi le annotazioni
+        for btn in self.annotations:
+            btn.opacity = 0
+
+        # Mostra il ritaglio
+        self.image.texture = cropped_texture
+
+        # Crea un overlay trasparente per intercettare i clic
+        self.click_overlay = Widget(size=self.size, pos=self.pos)
+        self.click_overlay.bind(on_touch_down=lambda instance, touch: self.restore_image_on_click(touch, original_texture))
+
+        # Aggiungi l'overlay al layout principale
+        self.add_widget(self.click_overlay)
+
+    def restore_image_on_click(self, touch, original_texture):
+        """Ripristina l'immagine principale e mostra le annotazioni al click."""
+        # Controlla se il click è avvenuto al di fuori dell'immagine
+        if not self.image.collide_point(*touch.pos):
+            # Rimuovi l'overlay e ripristina l'immagine principale
+            self.remove_widget(self.click_overlay)
+            self.image.texture = original_texture
+            for btn in self.annotations:
+                btn.opacity = 1
+
+
     def add_annotation(self, rel_x, rel_y, text, callback):
         """Aggiunge un'annotazione alla posizione relativa specificata, con dimensione adattabile"""
         print(f"Aggiunta annotazione: {text} alle coordinate ({rel_x}, {rel_y})")
@@ -135,7 +204,7 @@ class OperaImageViewer(RelativeLayout):
             text='',
             size_hint=(None, None),  # Disabilita il ridimensionamento automatico
             background_color=(1, 0, 0, 0.5),
-            on_release=lambda btn: callback(text)
+            on_release=lambda btn: [callback(text), self.highlight_button_area(btn)]
         )
         
         # Aggiusta dinamicamente la dimensione del pulsante in base alle dimensioni dell'immagine
@@ -154,6 +223,7 @@ class OperaImageViewer(RelativeLayout):
         btn.pos_hint = {'x': rel_x - 0.03, 'y': rel_y - 0.03}  # Centrare il bottone rispetto all'annotazione
         self.annotations.append(btn)
         self.content.add_widget(btn)
+
 
 
 
@@ -188,9 +258,9 @@ class OperaScreen(Screen):
         try:
             db.connect()
 
-            # Query per ottenere l'immagine principale dell'opera e i dettagli
+            # Query per ottenere l'immagine principale dell'opera e i dettagli, incluso il sottotitolo
             query = """
-                SELECT id, immagine_id, percorso_immagine
+                SELECT id, immagine_id, percorso_immagine, sottotitolo
                 FROM opere_d_arte
                 WHERE id = %s
             """
@@ -204,12 +274,17 @@ class OperaScreen(Screen):
                 print(f"Nessun dato trovato per opera_id {self.opera_id}.")
                 self.image_paths = []
             else:
-                # Popola image_paths con i dati dell'immagine principale
-                self.image_paths = [{'immagine_id': row[1], 'percorso_immagine': row[2]} for row in result]
+                # Popola image_paths con i dati dell'immagine principale e del sottotitolo
+                self.image_paths = [
+                    {'immagine_id': row[1], 'percorso_immagine': row[2], 'sottotitolo': row[3]} for row in result
+                ]
 
                 # Imposta il primo elemento come immagine corrente
                 self.current_image_index = 0
                 self.image_source = self.image_paths[0]['percorso_immagine']
+
+                # Aggiorna il footer con il sottotitolo della prima immagine
+                self.update_footer_with_subtitle()
 
                 # Carica annotazioni per la prima immagine (se necessario)
                 self.load_annotations_for_current_image()
@@ -219,6 +294,7 @@ class OperaScreen(Screen):
             self.image_paths = []
         finally:
             db.close()
+
 
 
     def load_annotations_for_current_image(self):
@@ -267,10 +343,14 @@ class OperaScreen(Screen):
         self.current_image_index = (self.current_image_index - 1) % len(self.image_paths)
         self.image_source = self.image_paths[self.current_image_index]['percorso_immagine']
 
+        # Aggiorna il footer con il sottotitolo
+        self.update_footer_with_subtitle()
+
         # Aggiorna la visualizzazione
         self.annotations.clear()
         self.load_annotations_for_current_image()
         self.update_display()
+
 
     def show_next_image(self):
         """Mostra l'immagine successiva nella lista, se disponibile."""
@@ -280,10 +360,14 @@ class OperaScreen(Screen):
         self.current_image_index = (self.current_image_index + 1) % len(self.image_paths)
         self.image_source = self.image_paths[self.current_image_index]['percorso_immagine']
 
+        # Aggiorna il footer con il sottotitolo
+        self.update_footer_with_subtitle()
+
         # Aggiorna la visualizzazione
         self.annotations.clear()
         self.load_annotations_for_current_image()
         self.update_display()
+
 
     def show_annotation_text(self, text):
         """Mostra il testo dell'annotazione nel footer."""
@@ -302,6 +386,14 @@ class OperaScreen(Screen):
                     self.show_annotation_text
                 )
 
+    def update_footer_with_subtitle(self):
+        """Aggiorna il footer con il sottotitolo della nuova immagine."""
+        if self.image_paths and 0 <= self.current_image_index < len(self.image_paths):
+            sottotitolo = self.image_paths[self.current_image_index].get('sottotitolo', '')
+            self.ids.footer_field.update_text(sottotitolo)
+        else:
+            self.ids.footer_field.update_text('')
+
 
     def on_info_button_press(self):
         """Naviga alla schermata InfoOperaScreen con i dettagli dell'immagine corrente."""
@@ -310,4 +402,6 @@ class OperaScreen(Screen):
         info_screen.image_source = self.image_source
         info_screen.opera_id = self.opera_id
         info_screen.current_language = self.current_language
+        app.root.transition.direction = 'left'
         app.root.current = 'info_opera'
+

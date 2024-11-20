@@ -1,0 +1,12 @@
+# Definizione della UI per la schermata AddDetailsScreen
+
+<AddDetailsScreen>:
+    FloatLayout:
+        Image:
+            id: image
+            source: 'src/app/images/operas/cappella_magi_est.jpg'
+            size_hint: None, None
+            size: 800, 600
+            pos: 0, 0
+            on_touch_down: root.on_image_click(*args)
+

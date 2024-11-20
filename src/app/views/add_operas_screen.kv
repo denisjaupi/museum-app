@@ -1,62 +1,117 @@
+<FooterField>:
+    orientation: 'horizontal'
+    size_hint_y: 0.2
+
 <AddOperasScreen>:
+
     BoxLayout:
         orientation: 'vertical'
 
-        # Header Section 
+###################################################################
+        
+        ###################################################################
+        # Header Section - Logo, Login Button, and Language Spinner
+
         BoxLayout:
             orientation: 'horizontal'
-            size_hint_y: 0.2
-            padding: [20]
+            size_hint_y: 0.1
             canvas.before:
                 Color:
-                    rgba: [0.9, 0.9, 0.9, 1]
+                    rgba: 1, 1, 1, 1  # White background
                 Rectangle:
                     pos: self.pos
                     size: self.size
-            Button:
-                text: 'Aggiungi Logo'
-                size_hint: (1, 1)
-                background_normal: ''
-                background_color: [0.447, 0.106, 0.157, 1]
-                on_release: root.on_logo_click()
+
+            # Logo Section (30%)
+            BoxLayout:
+                size_hint_x: 0.2
+                padding: [0, 20, 0, 0]
+
+                Image:
+                    source: 'images/operas/first_view_images/IMG_Logo.png'
+                    allow_stretch: True
+                    keep_ratio: True
+                    
 
 
-        # Centrale
+            # Central Section (30%) - Empty space for centering purposes
+            BoxLayout:
+                size_hint_x: 0.6
+
+            # Login Button Section (30%)
+            BoxLayout:
+                size_hint_x: 0.2
+                orientation: 'horizontal'
+                spacing: 20
+                padding: 20
+
+                BoxLayout:
+                    size_hint_x: 0.5
+
+
+###################################################################
+
+
+        # Box centrale (bianca)
         BoxLayout:
             size_hint_y: 0.6
             orientation: 'vertical'
             canvas.before:
                 Color:
-                    rgba: 1, 1, 1, 1
+                    rgba: 1, 1, 1, 1  # Bianco
                 Rectangle:
                     pos: self.pos
                     size: self.size
-
-            # Sezione superiore centrale (invariata)
+            
+            # BoxLabel per Ispeziona e Back Button
             BoxLayout:
                 orientation: 'horizontal'
-                size_hint_y: 0.2
+                size_hint_y: 0.2  # Riserva solo 20% dell'altezza totale
                 padding: [20]
 
+                # Colonna sinistra per il Back Button
                 BoxLayout:
-                    size_hint_x: 0.075
+                    size_hint_x: 0.075  # 8.5% dello spazio orizzontale
+                    orientation: 'horizontal'
+
                     Button:
-                        text: 'Back'
-                        on_release: app.root.current = 'benvenuto'
-                        size_hint: (1, 1)
+                        on_release:
+                            app.root.transition.direction = 'right'  
+                            app.root.current = 'login'
+                        size_hint: (1, 1)  # Riempi tutto lo spazio disponibile
                         background_normal: ''
                         background_color: [0.9, 0.9, 0.9, 1]
+                        text: 'Back'
+                        font_size: self.height * 0.3
+                        font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
+                        color: [0, 0, 0, 1]
+                        
+
+
+                        BoxLayout:
+                            orientation: 'horizontal'
+                            padding: [10, 10, 10, 10]
+                            spacing: 10
+
 
                 Widget:
-                    size_hint_x: None
-                    width: 20
+                    size_hint_x: None  
+                    width: 20 
 
+                # Colonna destra per la Label Ispeziona
                 BoxLayout:
-                    size_hint_x: 0.825
+                    size_hint_x: 0.825  # 81.5% dello spazio orizzontale
+                    orientation: 'horizontal'
+
                     Label:
-                        text: 'Aggiungi Opere'
-                        font_size: 40
+                        text: 'Galleria'
+                        font_size: self.height * 0.4
+                        font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
                         color: [0.447, 0.106, 0.157, 1]
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: (1, 1)  # Riempi tutto lo spazio disponibile
 
             # Layout principale con pulsanti laterali e griglia centrale
             BoxLayout:
@@ -66,11 +121,14 @@
 
                 # Bottone per scorrere a sinistra
                 ScrollButton:
-                    text: '<'
+                    text: '<'  # Usa l'icona di freccia o sostituisci con immagine
                     on_release: root.scroll_left()
-                    size_hint_x: 0.1
+                    font_name: 'src/app/utils/NotoSansSymbols-Black.ttf'
+                    size_hint: 0.1, 1
                     background_normal: ''
                     background_color: [0.9, 0.9, 0.9, 1]
+                    color: [0, 0, 0, 1]
+                    padding: [20, 20]  # Maggior padding
 
                 # Layout griglia con card
                 GridLayout:
@@ -78,31 +136,22 @@
                     cols: 3
                     spacing: 20
                     padding: [20, 0, 20, 0]
-                    size_hint_x: 0.8
 
                 # Bottone per scorrere a destra
                 ScrollButton:
                     text: '>'
+                    font_name: 'src/app/utils/NotoSansSymbols-Black.ttf'
                     on_release: root.scroll_right()
-                    size_hint_x: 0.1
+                    size_hint: 0.1, 1
                     background_normal: ''
                     background_color: [0.9, 0.9, 0.9, 1]
+                    color: [0, 0, 0, 1]
+                    padding: [20, 20]  # Maggior padding
 
-        # Footer con pulsante "Aggiungi Opera"
-        BoxLayout:
+###################################################################
+
+        # Footer
+        FooterField:
             id: footer
-            orientation: 'horizontal'
-            size_hint_y: 0.2
-            padding: [20]
-            canvas.before:
-                Color:
-                    rgba: [0.9, 0.9, 0.9, 1]
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            Button:
-                text: 'Aggiungi Opera'
-                size_hint: (1, 1)
-                background_normal: ''
-                background_color: [0.447, 0.106, 0.157, 1]
-                on_release: root.add_opera_card()
+
+
