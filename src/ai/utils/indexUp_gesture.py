@@ -12,8 +12,6 @@ class IndexUpController:
         self.screen_width, self.screen_height = pyautogui.size()
         # Coda per memorizzare le ultime 5 posizioni del dito
         self.pointer_positions = collections.deque(maxlen=self.smoothing_factor)
-        self.click_blocked = False
-        self.last_click_time = 0
 
     def smooth(self, new_position):
         self.pointer_positions.append(new_position)
@@ -55,8 +53,7 @@ class IndexUpController:
                 if current_time - self.last_move_time > 2.5:
                     pyautogui.click() 
                     print("Click eseguito!")
-                    self.click_blocked = True  # Blocca ulteriori click
-                    self.last_click_time = current_time  # Aggiorna l'ultimo click eseguito
+                    time.sleep(1)
             else:
                 # Se il mouse si è mosso, aggiorna il timer
                 self.last_move_time = current_time

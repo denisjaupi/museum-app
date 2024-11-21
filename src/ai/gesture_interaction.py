@@ -1,5 +1,7 @@
 import cv2
 import mediapipe as mp
+import pyautogui
+import time
 from ai.gesture_recognition import GestureModelDetector as gr
 # from utils import zooming_gesture as zg
 from ai.utils import indexUp_gesture as ig
@@ -11,29 +13,37 @@ class GestureInteraction:
     def __init__(self):
         # self.image = None 
         # self.zoomed_image = None  
-
+        self.last_click_time = 0
+    
         self.index_up_controller = ig.IndexUpController()
         self.index_middle_up_controller = img.IndexMiddleUpController()
         # self.zooming_controller = zg.ZoomingController()
 
 
-    def set_image(self, image_path):
-        """Carica un'immagine da un percorso specificato."""
-        self.image = cv2.imread(image_path)
-        if self.image is None:
-            print(f"[ERROR] Impossibile caricare l'immagine da {image_path}. Verifica il percorso.")
-        else:
-            print(f"[INFO] Immagine caricata con successo da {image_path}.")
+    # def set_image(self, image_path):
+    #     """Carica un'immagine da un percorso specificato."""
+    #     self.image = cv2.imread(image_path)
+    #     if self.image is None:
+    #         print(f"[ERROR] Impossibile caricare l'immagine da {image_path}. Verifica il percorso.")
+    #     else:
+    #         print(f"[INFO] Immagine caricata con successo da {image_path}.")
 
 
-    def get_zoomed_image(self):
-        return self.zoomed_image if self.zoomed_image is not None else self.image
+    # def get_zoomed_image(self):
+    #     return self.zoomed_image if self.zoomed_image is not None else self.image
 
 
     def handle_gesture(self, gesture_name, landmarks):
+        current_time = time.time()
         if gesture_name == "Index up" or gesture_name == "Index still up":
             print("[INFO] Esecuzione 'Index Up'")
             self.index_up_controller.execute(landmarks)
+        elif gesture_name == "Zoom in":
+            # Disabilita il click se è stato eseguito recentemente
+            if current_time - self.last_click_time > 2:  # 1 secondo di attesa tra i click
+                print("[INFO] Esecuzione 'Zoom in'")
+                pyautogui.click()
+                self.last_click_time = current_time  # Aggiorna il tempo dell'ultimo click
         elif gesture_name == "Index middle up":
             print("[INFO] Esecuzione 'Index Middle Up'")
             self.index_middle_up_controller.execute(landmarks)

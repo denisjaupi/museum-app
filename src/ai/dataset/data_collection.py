@@ -8,7 +8,8 @@ import os
 gesture_classes = {
     0: "Index up",
     1: "Index middle up",
-    2: "Zoom in \ Zoom out"
+    2: "Zoom in",
+    3: "Not classified"
 }
 
 ##########################################

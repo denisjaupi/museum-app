@@ -5,8 +5,6 @@ import numpy as np
 import joblib
 
 # TODO:
-# Da migliorare le classi csv catturando nuovi dati. 
-# Zoom out è problematico e si confonde con indice alzato.
 # Da aggiungere una nuova classe per i gesti non classificati.
 
 class GestureModelDetector:
@@ -14,7 +12,7 @@ class GestureModelDetector:
         self.class_labels = {
             0: "Index up",
             1: "Index middle up",
-            2: "Zoom in / Zoom out",
+            2: "Zoom in"
         }
         self.model_path =  os.path.join(os.path.dirname(__file__), 'model', 'gesture_recognition_model.pkl')
 
@@ -62,7 +60,7 @@ class GestureModelDetector:
 def main():
     # Inizializza MediaPipe
     mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5)
+    hands = mp_hands.Hands(min_detection_confidence=0.7, max_num_hands=1, min_tracking_confidence=0.5)
 
     # Carica il modello addestrato
     trainer = GestureModelDetector()
