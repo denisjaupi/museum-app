@@ -12,7 +12,8 @@ class IndexUpController:
         self.screen_width, self.screen_height = pyautogui.size()
         # Coda per memorizzare le ultime 5 posizioni del dito
         self.pointer_positions = collections.deque(maxlen=self.smoothing_factor)
-        
+        self.click_blocked = False
+        self.last_click_time = 0
 
     def smooth(self, new_position):
         self.pointer_positions.append(new_position)
@@ -54,6 +55,8 @@ class IndexUpController:
                 if current_time - self.last_move_time > 2.5:
                     pyautogui.click() 
                     print("Click eseguito!")
+                    self.click_blocked = True  # Blocca ulteriori click
+                    self.last_click_time = current_time  # Aggiorna l'ultimo click eseguito
             else:
                 # Se il mouse si è mosso, aggiorna il timer
                 self.last_move_time = current_time
@@ -83,6 +86,9 @@ def main():
         if not ret:
             print("[ERROR] Non è stato possibile acquisire il frame dalla webcam.")
             break
+
+        # Ribalta il frame orizzontalmente per evitare l'effetto specchiato
+        frame = cv2.flip(frame, 1)
 
         # Converti il frame in RGB per MediaPipe
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
