@@ -1,7 +1,3 @@
-<FooterField>:
-    orientation: 'horizontal'
-    size_hint_y: 0.2
-
 <AddOperasScreen>:
 
     BoxLayout:
@@ -28,7 +24,7 @@
                 padding: [0, 20, 0, 0]
 
                 Image:
-                    source: 'images/operas/first_view_images/IMG_Logo.png'
+                    source: 'src/app/images/operas/first_view_images/IMG_Logo.png'
                     allow_stretch: True
                     keep_ratio: True
                     
@@ -150,8 +146,26 @@
 
 ###################################################################
 
-        # Footer
-        FooterField:
-            id: footer
+        # Footer (sostituito con uno spazio bordeaux e un pulsante)
+        BoxLayout:
+            size_hint_y: 0.2
+            padding: [self.width * 0.3, self.height * 0.2]
 
+            # Bordeaux background for the footer
+            canvas.before:
+                Color:
+                    rgba: [0.447, 0.106, 0.157, 1]  # Bordeaux color
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
 
+            Button:
+                text: 'Aggiungi opera'
+                font_size: self.height * 0.4
+                font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
+                halign: 'center'
+                valign: 'middle'
+                background_color: [0.9, 0.9, 0.9, 1]  # White background
+                color: [0, 0, 0, 1]   # Black text
+                background_normal: ''  # Remove default background
+                on_press: root.open_add_art_popup()

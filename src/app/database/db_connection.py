@@ -52,15 +52,6 @@ class DBConnection:
             print("Connessione non stabilita.")
             return None
 
-    def insert_opera(self, titolo, autore, descrizione, immagine_principale):
-        """Inserisce una nuova opera d'arte nella tabella opere_d_arte."""
-        query = """
-        INSERT INTO opere_d_arte (titolo, autore, descrizione, immagine_principale)
-        VALUES (%s, %s, %s, %s)
-        """
-        params = (json.dumps(titolo), autore, json.dumps(descrizione), immagine_principale)
-        self.execute_query(query, params, commit=True)
-
     # Funzione insert_user con commit esplicito
     def insert_user(self, username, password_hash):
         """Inserisce un nuovo utente nel database."""
@@ -106,10 +97,17 @@ class DBConnection:
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         # Rimuovi json.dumps e passa i dizionari direttamente
-        params = (id, immagine_id, titolo, testo, coordinata_x, coordinata_y)
+        params = (id, immagine_id, json.dumps(titolo), json.dumps(testo), coordinata_x, coordinata_y)
         self.execute_query(query, params, commit=True)
 
-
+    def insert_operas(self, titolo, autore, descrizione, percorso_immagine, sottotitolo):
+        """Salva una nuova opera d'arte nel database."""
+        query = """
+        INSERT INTO opere_d_arte (titolo, autore, descrizione, percorso_immagine, sottotitolo)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        params = (json.dumps(titolo), autore, json.dumps(descrizione), percorso_immagine, sottotitolo)
+        self.execute_query(query, params, commit=True)
 
     def close(self):
         """Chiude la connessione al database."""

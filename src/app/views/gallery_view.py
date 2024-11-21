@@ -1,4 +1,4 @@
-from database.db_connection import DBConnection
+from app.database.db_connection import DBConnection
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image

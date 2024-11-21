@@ -1,12 +1,26 @@
-# Definizione della UI per la schermata AddDetailsScreen
-
 <AddDetailsScreen>:
     FloatLayout:
-        Image:
-            id: image
-            source: 'src/app/images/operas/cappella_magi_est.jpg'
-            size_hint: None, None
-            size: 800, 600
-            pos: 0, 0
-            on_touch_down: root.on_image_click(*args)
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1  # White background
+            Rectangle:
+                pos: self.pos
+                size: self.size
 
+        Button:
+            size_hint_y: 0.2
+            text: "Back"
+            font_size: self.height * 0.3
+            font_name: 'src/app/utils/AbrilFatface-Regular.ttf'
+            color: [0, 0, 0, 1]
+            background_normal: ''
+            background_color: [0.9, 0.9, 0.9, 1]
+            size_hint: 0.15, 0.1
+            pos_hint: {'x': 0.02, 'y': 0.85}
+            on_press: root.manager.current = 'aggiungi_opere'
+
+
+        # Visualizzazione dell'immagine
+        Image:
+            size_hint_y: 0.8

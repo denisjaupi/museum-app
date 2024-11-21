@@ -11,7 +11,7 @@ from kivy.clock import Clock
 from kivy.app import App
 from kivy.uix.widget import Widget
 
-from database.db_connection import DBConnection
+from app.database.db_connection import DBConnection
 
 
 class FooterField(BoxLayout):

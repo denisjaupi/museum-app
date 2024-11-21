@@ -1,4 +1,4 @@
-from database.db_connection import DBConnection
+from app.database.db_connection import DBConnection
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
@@ -15,12 +15,7 @@ from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
 from kivy.uix.popup import Popup
 from kivy.uix.gridlayout import GridLayout
-
-class FooterField(BoxLayout):
-
-    def __init__(self, **kwargs):
-        super(FooterField, self).__init__(**kwargs)
-
+from kivy.uix.filechooser import FileChooserListView
 
 
 class Card(ButtonBehavior, BoxLayout):
@@ -252,6 +247,9 @@ class AddOperasScreen(Screen):
         self.fetch_opere_d_arte()  # Recupera i dati dal database
         self.update_cards()
 
+        self.db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
+        self.db.connect()
+
             
 
     def fetch_opere_d_arte(self):
@@ -305,3 +303,69 @@ class AddOperasScreen(Screen):
         if self.current_index + self.visible_cards < len(self.card_data):
             self.current_index += self.visible_cards
             self.update_cards()
+
+    def open_add_art_popup(self):
+        """Apre il popup per aggiungere opere d'arte."""
+        popup_layout = BoxLayout(orientation='vertical', spacing=10, padding=10)
+
+        # FileChooser per selezione multipla
+        filechooser = FileChooserListView(multiselect=True, filters=['*.png', '*.jpg', '*.jpeg'])
+        popup_layout.add_widget(filechooser)
+
+        # Campi di input
+        fields = GridLayout(cols=2, size_hint_y=None)
+        fields.bind(minimum_height=fields.setter('height'))
+
+        fields.add_widget(Label(text="Titolo (JSON):"))
+        titolo_input = TextInput(multiline=False)
+        fields.add_widget(titolo_input)
+
+        fields.add_widget(Label(text="Autore:"))
+        autore_input = TextInput(multiline=False)
+        fields.add_widget(autore_input)
+
+        fields.add_widget(Label(text="Descrizione (JSON):"))
+        descrizione_input = TextInput(multiline=True)
+        fields.add_widget(descrizione_input)
+
+        fields.add_widget(Label(text="Sottotitolo:"))
+        sottotitolo_input = TextInput(multiline=False)
+        fields.add_widget(sottotitolo_input)
+
+        popup_layout.add_widget(fields)
+
+        # Pulsanti per azioni
+        button_layout = BoxLayout(size_hint_y=None, height=50, spacing=10)
+        save_button = Button(text="Salva", size_hint_x=0.5)
+        close_button = Button(text="Chiudi", size_hint_x=0.5)
+
+        def save_data(instance):
+            """Salva i dati nel database."""
+            files = filechooser.selection
+            titolo = titolo_input.text
+            autore = autore_input.text
+            descrizione = descrizione_input.text
+            sottotitolo = sottotitolo_input.text
+
+            if files and titolo and autore:
+                for idx, file_path in enumerate(files):
+                    # Utilizza il metodo save_operas per salvare l'opera d'arte nel database
+                    self.db.insert_operas(titolo, autore, descrizione, file_path, sottotitolo)
+
+            popup.dismiss()  # Chiude il popup
+
+
+
+        save_button.bind(on_press=save_data)
+        close_button.bind(on_press=lambda x: popup.dismiss())
+        button_layout.add_widget(save_button)
+        button_layout.add_widget(close_button)
+        popup_layout.add_widget(button_layout)
+
+        # Creazione e apertura del popup
+        popup = Popup(title="Aggiungi Opere d'Arte", content=popup_layout, size_hint=(0.9, 0.9))
+        popup.open()
+
+    def on_stop(self):
+        """Chiude la connessione al database quando l'app viene chiusa."""
+        self.db.close()

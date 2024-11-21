@@ -1,16 +1,14 @@
 from kivy.app import App
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.popup import Popup
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
-from kivy.uix.floatlayout import FloatLayout
 from kivy.lang import Builder
-from database.db_connection import DBConnection
-import json
+from app.database.db_connection import DBConnection
+
 
 # Classe della schermata AddDetailsScreen
 class AddDetailsScreen(Screen):
@@ -49,6 +47,12 @@ class AddDetailsScreen(Screen):
             
             # Crea il popup
             self.open_popup(rel_x, rel_y)
+
+    def on_leave(self):
+        """Rimuove l'immagine corrente quando si lascia la schermata."""
+        if self.image:
+            self.remove_widget(self.image)
+            self.image = None  # Ripulisce il riferimento all'immagine
 
     def open_popup(self, rel_x, rel_y):
         """Apre il popup per inserire un'annotazione."""

@@ -1,5 +1,5 @@
 from kivy.uix.screenmanager import Screen
-from database.db_connection import DBConnection
+from app.database.db_connection import DBConnection
 import bcrypt
 
 class LoginScreen(Screen):
