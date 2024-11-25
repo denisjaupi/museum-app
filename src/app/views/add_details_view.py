@@ -1,5 +1,4 @@
-from kivy.app import App
-from kivy.uix.screenmanager import Screen, ScreenManager
+from kivy.uix.screenmanager import Screen
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
@@ -7,15 +6,14 @@ from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.lang import Builder
-from app.database.db_connection import DBConnection
+
+from app.database.db_instance import db_instance
 
 
 # Classe della schermata AddDetailsScreen
 class AddDetailsScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        self.db.connect()
 
         # Aggiungi variabili per i dati passati
         self.opera_id = None
@@ -83,7 +81,7 @@ class AddDetailsScreen(Screen):
             
             # Usa opera_id e immagine_id per salvare l'annotazione
             if self.opera_id and self.immagine_id:
-                self.db.insert_annotation(self.opera_id, self.immagine_id, titolo, testo, coordinata_x, coordinata_y)
+                db_instance.insert_annotation(self.opera_id, self.immagine_id, titolo, testo, coordinata_x, coordinata_y)
             popup.dismiss()  # Chiudi il popup
 
         # Aggiungi il pulsante di salvataggio
@@ -97,5 +95,5 @@ class AddDetailsScreen(Screen):
 
     def on_stop(self):
         """Chiude la connessione al database quando l'app viene chiusa."""
-        self.db.close()
+        db_instance.close()
 

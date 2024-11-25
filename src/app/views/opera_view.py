@@ -11,7 +11,7 @@ from kivy.clock import Clock
 from kivy.app import App
 from kivy.uix.widget import Widget
 
-from app.database.db_connection import DBConnection
+from app.database.db_instance import db_instance
 
 
 class FooterField(BoxLayout):
@@ -254,17 +254,14 @@ class OperaScreen(Screen):
             print("Errore: opera_id non è impostato.")
             return
 
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
         try:
-            db.connect()
-
             # Query per ottenere l'immagine principale dell'opera e i dettagli, incluso il sottotitolo
             query = """
                 SELECT id, immagine_id, percorso_immagine, sottotitolo
                 FROM opere_d_arte
                 WHERE id = %s
             """
-            result = db.execute_query(query, (self.opera_id,))
+            result = db_instance.execute_query(query, (self.opera_id,))
 
             # Debug: stampa il risultato della query
             print(f"Risultato della query opere_d_arte: {result}")
@@ -293,7 +290,7 @@ class OperaScreen(Screen):
             print(f"Errore durante il caricamento dell'opera_id {self.opera_id}: {e}")
             self.image_paths = []
         finally:
-            db.close()
+            db_instance.close()
 
 
 
@@ -304,17 +301,15 @@ class OperaScreen(Screen):
             return
 
         immagine_id = self.image_paths[self.current_image_index]['immagine_id']
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        try:
-            db.connect()
 
+        try:
             # Query per ottenere annotazioni specifiche per immagine_id
             query_annotations = f"""
                 SELECT titolo->>'{self.current_language}', testo->>'{self.current_language}', coordinata_x, coordinata_y
                 FROM dettagli_opera
                 WHERE immagine_id = %s
             """
-            result_annotations = db.execute_query(query_annotations, (immagine_id,))
+            result_annotations = db_instance.execute_query(query_annotations, (immagine_id,))
 
             # Debug: stampa il risultato della query
             print(f"Annotazioni trovate per immagine_id {immagine_id}: {result_annotations}")
@@ -332,7 +327,7 @@ class OperaScreen(Screen):
             print(f"Errore durante il caricamento delle annotazioni per immagine_id {immagine_id}: {e}")
             self.annotations = []
         finally:
-            db.close()
+            db_instance.close()
 
 
     def show_previous_image(self):

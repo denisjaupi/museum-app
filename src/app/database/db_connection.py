@@ -30,27 +30,31 @@ class DBConnection:
 
     def execute_query(self, query, params=None, commit=False):
         """Esegue una query (SELECT o DML) e restituisce i risultati."""
-        if self.connection and self.cursor:
-            try:
-                # Esegui la query
-                self.cursor.execute(query, params)
+        try:
+            if not self.connection or self.connection.closed:
+                print("Connessione chiusa, tentativo di riconnessione...")
+                self.connect()  # Riconnettiti automaticamente al database
                 
-                # Se la query è di lettura (SELECT), restituisci i risultati
-                if query.strip().lower().startswith("select"):
-                    return self.cursor.fetchall()
+            if not self.cursor or self.cursor.closed:
+                self.cursor = self.connection.cursor()  # Ricrea il cursore se necessario
 
-                # Se è una query di modifica, effettua il commit (se richiesto)
-                if commit:
-                    self.connection.commit()
+            self.cursor.execute(query, params)
 
-                return None  # Nessun risultato da restituire per DML (INSERT, UPDATE, DELETE)
-            except Exception as error:
-                print(f"Errore nell'esecuzione della query: {error}")
+            # Se la query è di lettura (SELECT), restituisci i risultati
+            if query.strip().lower().startswith("select"):
+                return self.cursor.fetchall()
+
+            # Se è una query di modifica, effettua il commit (se richiesto)
+            if commit:
+                self.connection.commit()
+
+            return None  # Nessun risultato da restituire per DML (INSERT, UPDATE, DELETE)
+        except Exception as error:
+            print(f"Errore nell'esecuzione della query: {error}")
+            if self.connection:
                 self.connection.rollback()  # Ripristina in caso di errore
-                return None
-        else:
-            print("Connessione non stabilita.")
             return None
+
 
     # Funzione insert_user con commit esplicito
     def insert_user(self, username, password_hash):

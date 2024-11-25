@@ -1,7 +1,7 @@
 from kivy.uix.screenmanager import Screen
 from kivy.app import App
 from kivy.properties import StringProperty, NumericProperty
-from app.database.db_connection import DBConnection
+from app.database.db_instance import db_instance
 
 class InfoOperaScreen(Screen):
     image_source = StringProperty('')
@@ -18,19 +18,15 @@ class InfoOperaScreen(Screen):
         if not self.opera_id:
             return
 
-        # Connessione al database
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        db.connect()
-
         # Query per ottenere l'immagine principale, titolo, autore e descrizione dell'opera
         query_opera = """
             SELECT percorso_immagine, titolo->>'{lang}', autore, descrizione->>'{lang}'
             FROM opere_d_arte 
             WHERE id = %s
         """.format(lang=self.current_language)
-        result = db.execute_query(query_opera, (self.opera_id,))
+        result = db_instance.execute_query(query_opera, (self.opera_id,))
 
-        db.close()
+        db_instance.close()
 
         # Se la query ha restituito risultati, popola i campi della schermata
         if result:

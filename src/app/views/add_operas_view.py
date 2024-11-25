@@ -1,4 +1,4 @@
-from app.database.db_connection import DBConnection
+from app.database.db_instance import db_instance
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
@@ -70,17 +70,13 @@ class Card(ButtonBehavior, BoxLayout):
             # Crea il layout per il popup
             layout = BoxLayout(orientation='vertical', padding=10, spacing=10)
 
-            # Recupera i dettagli dell'opera dal database (incluso l'autore)
-            db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-            db.connect()
-
             query_details = f"""
                 SELECT titolo->'{self.add_operas_screen.current_language}', descrizione->'{self.add_operas_screen.current_language}', autore, percorso_immagine
                 FROM opere_d_arte
                 WHERE id = {self.opera_id};
             """
-            result = db.execute_query(query_details)
-            db.close()
+            result = db_instance.execute_query(query_details)
+            db_instance.close()
 
             if result:
                 title, description, author, image_path = result[0]
@@ -89,14 +85,14 @@ class Card(ButtonBehavior, BoxLayout):
                 images_layout = BoxLayout(orientation='horizontal', size_hint_y=None, height=200, spacing=10)
 
                 # Recupera le immagini associate a questa opera (con immagine_id e percorso_immagine)
-                db.connect()
+                db_instance.connect()
                 query_images = f"""
                     SELECT immagine_id, percorso_immagine
                     FROM opere_d_arte 
                     WHERE id = {self.opera_id};
                 """
-                images = db.execute_query(query_images)
-                db.close()
+                images = db_instance.execute_query(query_images)
+                db_instance.close()
 
                 # Usa un GridLayout per i pulsanti in modo che si distribuiscano orizzontalmente
                 buttons_layout = GridLayout(cols=len(images), size_hint_y=None, height=40, spacing=10)  
@@ -180,18 +176,14 @@ class Card(ButtonBehavior, BoxLayout):
         """Gestisci il click su uno dei pulsanti delle immagini."""
         print(f"Immagine selezionata: {image_id}")
 
-        # Recupera l'id dell'opera e il percorso dell'immagine selezionata
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        db.connect()
-
         # Query per ottenere id, immagine_id e percorso_immagine
         query = f"""
             SELECT id, immagine_id, percorso_immagine
             FROM opere_d_arte
             WHERE immagine_id = {image_id};
         """
-        result = db.execute_query(query)
-        db.close()
+        result = db_instance.execute_query(query)
+        db_instance.close()
 
         if result:
             opera_id, immagine_id, percorso_immagine = result[0]
@@ -208,8 +200,6 @@ class Card(ButtonBehavior, BoxLayout):
 
     def save_changes(self, title, author, description, popup):
         """Salva le modifiche nel database"""
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        db.connect()
 
         # Query di aggiornamento
         update_query = f"""
@@ -217,9 +207,9 @@ class Card(ButtonBehavior, BoxLayout):
             SET titolo = '{title}', autore = '{author}', descrizione = '{description}'
             WHERE id = {self.opera_id};
         """
-        db.execute_query(update_query)
-        db.commit()  # Applica le modifiche
-        db.close()
+        db_instance.execute_query(update_query)
+        db_instance.commit()  # Applica le modifiche
+        db_instance.close()
 
         # Chiudi il popup dopo aver salvato le modifiche
         popup.dismiss()
@@ -246,31 +236,26 @@ class AddOperasScreen(Screen):
         super(AddOperasScreen, self).__init__(**kwargs)
         self.fetch_opere_d_arte()  # Recupera i dati dal database
         self.update_cards()
-
-        self.db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        self.db.connect()
-
             
 
     def fetch_opere_d_arte(self):
         """Recupera i dati delle opere d'arte dal database e aggiorna card_data."""
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        db.connect()  # Connessione al database
+        try:
+            # Modifica la query per includere solo le opere con id_immagine=1
+            query = f"""
+                SELECT id, titolo->'{self.current_language}', descrizione->'{self.current_language}', percorso_immagine 
+                FROM opere_d_arte 
+                WHERE immagine_id = 1;
+            """
+            results = db_instance.execute_query(query)
 
-        # Modifica la query per includere solo le opere con id_immagine=1
-        query = f"""
-            SELECT id, titolo->'{self.current_language}', descrizione->'{self.current_language}', percorso_immagine 
-            FROM opere_d_arte 
-            WHERE immagine_id = 1;
-        """
-        results = db.execute_query(query)
-
-        if results:
-            # Aggiungi l'ID dell'opera alla card_data
-            self.card_data = [
-                {'id': row[0], 'title': row[1], 'description': row[2], 'image_source': row[3]} for row in results
-            ]
-        db.close()  # Chiudi la connessione
+            if results:
+                # Aggiungi l'ID dell'opera alla card_data
+                self.card_data = [
+                    {'id': row[0], 'title': row[1], 'description': row[2], 'image_source': row[3]} for row in results
+                ]
+        finally:
+            db_instance.close()  # Chiudi la connessione
 
 
 

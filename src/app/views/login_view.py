@@ -1,5 +1,5 @@
 from kivy.uix.screenmanager import Screen
-from app.database.db_connection import DBConnection
+from app.database.db_instance import db_instance
 import bcrypt
 
 class LoginScreen(Screen):
@@ -12,12 +12,8 @@ class LoginScreen(Screen):
         self.ids.username_error.opacity = 0
         self.ids.password_error.opacity = 0
 
-        # Crea una connessione al database
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        db.connect()
-
         # Recupera l'hash della password dal database per il nome utente
-        stored_password_hash = db.get_password_hash(username)
+        stored_password_hash = db_instance.get_password_hash(username)
 
         if stored_password_hash:
             # Confronta la password inserita con l'hash memorizzato
@@ -34,7 +30,7 @@ class LoginScreen(Screen):
             self.ids.username_error.text = "Nome utente non trovato!"
             self.ids.username_error.opacity = 1  # Mostra l'errore per il nome utente
 
-        db.close()
+        db_instance.close()
 
     def reset_form(self):
         """Reset dei campi di input dopo la registrazione."""

@@ -1,5 +1,5 @@
 from kivy.uix.screenmanager import Screen
-from app.database.db_connection import DBConnection
+from app.database.db_instance import db_instance
 import bcrypt
 
 class RegistrationScreen(Screen):
@@ -11,11 +11,8 @@ class RegistrationScreen(Screen):
         
         # Verifica se le password corrispondono
         if password == confirm_password:
-            # Connessione al database
-            db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-            db.connect()         
             # Controlla se l'utente esiste già
-            existing_user = db.get_user_by_username(username)
+            existing_user = db_instance.get_user_by_username(username)
             if existing_user:
                 print("Nome utente già esistente!")
                 return
@@ -25,7 +22,7 @@ class RegistrationScreen(Screen):
 
             # Inserisci il nuovo utente nel database
             try:
-                db.insert_user(username, password_hash)
+                db_instance.insert_user(username, password_hash)
                 print(f"Utente {username} registrato con successo!")
                 self.reset_form()  # Reset the form and go back to login
                 self.manager.current = 'login'  # Cambia schermata al login

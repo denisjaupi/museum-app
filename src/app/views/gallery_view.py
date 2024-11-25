@@ -1,4 +1,4 @@
-from app.database.db_connection import DBConnection
+from app.database.db_instance import db_instance
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
@@ -139,8 +139,6 @@ class GalleryScreen(Screen):
 
     def fetch_opere_d_arte(self):
         """Recupera i dati delle opere d'arte dal database e aggiorna card_data."""
-        db = DBConnection(host="localhost", port="5432", database="museum_app_db", user="postgres", password="postgres")
-        db.connect()  # Connessione al database
 
         # Modifica la query per includere solo le opere con id_immagine=1
         query = f"""
@@ -148,14 +146,14 @@ class GalleryScreen(Screen):
             FROM opere_d_arte 
             WHERE immagine_id = 1;
         """
-        results = db.execute_query(query)
+        results = db_instance.execute_query(query)
 
         if results:
             # Aggiungi l'ID dell'opera alla card_data
             self.card_data = [
                 {'id': row[0], 'title': row[1], 'description': row[2], 'image_source': row[3]} for row in results
             ]
-        db.close()  # Chiudi la connessione
+        db_instance.close()  # Chiudi la connessione
 
 
 
