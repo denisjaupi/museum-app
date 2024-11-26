@@ -1,3 +1,6 @@
+
+import os
+
 #################--------MAIN--------#################
 
 # Controllo frame rate
@@ -23,7 +26,7 @@ DB_CONFIG = {
 
 #################--------GESTURES--------#################
 
-### Per aggiungere i gesti (data_collection.py): ###
+### Per aggiungere nuovi gesti (data_collection.py): ###
 
 # 1 - Aggiungere il nome del gesto e il numero di classe corrispondente
 #     alla mappa dei gesti (gesture_classes).
