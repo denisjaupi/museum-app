@@ -1,6 +1,3 @@
-
-import os
-
 #################--------MAIN--------#################
 
 # Controllo frame rate
