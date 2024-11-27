@@ -186,4 +186,4 @@ Contiene la copia del database da scaricare per far funzionare al meglio la GUI.
 ## Licenza
 
 Questo progetto è concesso in licenza con la licenza MIT. Vedi il file `LICENSE` per ulteriori dettagli.
-```
+
