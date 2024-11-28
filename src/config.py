@@ -4,7 +4,10 @@
 FRAME_RATE = 30  # Frame per second
 
 # Interruttore AI
-ENABLE_AI = False  
+ENABLE_AI = False
+
+# Abilita la visualizzazione del bounding box
+BOUNDING_BOX_ENABLE = True
 
 
 

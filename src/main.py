@@ -6,7 +6,7 @@ from kivy.lang import Builder
 from kivy.clock import Clock
 
 
-from config import FRAME_RATE, ENABLE_AI
+from config import FRAME_RATE, ENABLE_AI, BOUNDING_BOX_ENABLE
 
 
 from ai.gesture_recognition import GestureModelDetector
@@ -80,12 +80,33 @@ class MuseumApp(App):
                 gesture_name = self.gesture_detector.class_labels[gesture_id]
                 self.gesture_interaction.handle_gesture(gesture_name, landmarks)
 
-                # Update UI or perform actions based on recognized gesture
-                if gesture_name == "Index up" or gesture_name == "Index middle up":
-                    print(f"[INFO] Recognized gesture: {gesture_name}")
-                    # Update relevant UI elements, such as zooming or switching screens
-                else:
-                    print("[WARNING] Gesto non riconosciuto.")
+                # Draw bounding box and gesture name
+                if BOUNDING_BOX_ENABLE and results.multi_hand_landmarks:
+                    for hand_landmarks in results.multi_hand_landmarks:
+                        # Extract bounding box coordinates
+                        h, w, _ = frame.shape
+                        x_min = int(min([lm.x for lm in hand_landmarks.landmark]) * w)
+                        y_min = int(min([lm.y for lm in hand_landmarks.landmark]) * h)
+                        x_max = int(max([lm.x for lm in hand_landmarks.landmark]) * w)
+                        y_max = int(max([lm.y for lm in hand_landmarks.landmark]) * h)
+
+                        # Draw bounding box
+                        cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+
+                        # Put gesture name above the bounding box
+                        cv2.putText(
+                            frame, 
+                            gesture_name, 
+                            (x_min, y_min - 10), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 
+                            0.8, 
+                            (0, 255, 0), 
+                            2
+                        )
+
+                print(f"[INFO] Recognized gesture: {gesture_name}")
+            else:
+                print("[WARNING] Gesto non riconosciuto.")
 
             # Optionally display frame for debugging
             cv2.imshow('Gesture Recognition', frame)
@@ -93,6 +114,7 @@ class MuseumApp(App):
             # Check for exit condition to release resources
             if cv2.waitKey(1) & 0xFF == 27:  # Press ESC to quit
                 self.stop()
+
 
     def on_stop(self):
         if ENABLE_AI:
