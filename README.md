@@ -7,7 +7,7 @@ Il sistema è stato applicato su una GUI sviluppata con Kivy, appositamente prog
 
 <img src="src/app/utils/Setup.png" alt="Setup del sistema">
 
-# Gesti riconosciuti
+## Gesti riconosciuti
 
 <img src="src/app/utils/AllGestures.png" alt="Gesti riconosciuti">
 
