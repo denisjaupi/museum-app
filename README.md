@@ -5,7 +5,8 @@ La rilevazione dei gesti manuali è stata conseguita attraverso l'addestramento 
 Il processo di apprendimento si è basato su un dataset composto da file CSV contenenti le coordinate dei landmark digitali, consentendo un'analisi dettagliata e precisa dei movimenti gestuali.
 Il sistema è stato applicato su una GUI sviluppata con Kivy, appositamente progettata per l'analisi interattiva e dettagliata delle opere d'arte.
 
-[!Setup del sistema](src/app/utils/Setup.png)
+<img src="src/app/utils/Setup.png" alt="Setup del sistema">
+
 
 ## Indice
 - [Installazione](#installazione)
