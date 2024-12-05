@@ -93,6 +93,23 @@ class MuseumApp(App):
                         # Draw bounding box
                         cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
+                        # Draw landmarks in red
+                        for lm in hand_landmarks.landmark:
+                            x = int(lm.x * w)
+                            y = int(lm.y * h)
+                            cv2.circle(frame, (x, y), 5, (0, 0, 255), -1)  # Red color for landmarks
+
+                        # Draw connections in white (lines between landmarks)
+                        connections = mp.solutions.hands.HAND_CONNECTIONS # This is predefined in MediaPipe
+                        for connection in connections:
+                            start_idx, end_idx = connection
+                            start = hand_landmarks.landmark[start_idx]
+                            end = hand_landmarks.landmark[end_idx]
+                            start_x, start_y = int(start.x * w), int(start.y * h)
+                            end_x, end_y = int(end.x * w), int(end.y * h)
+                            cv2.line(frame, (start_x, start_y), (end_x, end_y), (255, 255, 255), 2)  # White color for connections
+
+
                         # Put gesture name above the bounding box
                         cv2.putText(
                             frame, 
